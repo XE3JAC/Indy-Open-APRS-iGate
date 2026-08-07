@@ -1,0 +1,57 @@
+name: Update Web Flasher from Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-webflasher:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download firmware from latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p webflasher/firmware
+          rm -f /tmp/indy-open-*.bin
+          gh release download "${{ github.event.release.tag_name }}" \
+            --pattern 'indy-open-*.bin' \
+            --dir /tmp
+          BIN="$(find /tmp -maxdepth 1 -type f -name 'indy-open-*.bin' | head -n 1)"
+          if [ -z "$BIN" ]; then
+            echo "No se encontró un asset indy-open-*.bin en el release."
+            exit 1
+          fi
+          cp "$BIN" webflasher/firmware/indy-open-latest.bin
+
+      - name: Update manifest version
+        env:
+          VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path("webflasher/manifest.json")
+          data = json.loads(p.read_text())
+          data["version"] = os.environ["VERSION"].lstrip("v")
+          p.write_text(json.dumps(data, indent=2) + "\n")
+          PY
+
+      - name: Commit updated web flasher
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add webflasher/firmware/indy-open-latest.bin webflasher/manifest.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Update Web Flasher to ${{ github.event.release.tag_name }}"
+          git push

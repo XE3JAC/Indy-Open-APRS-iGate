@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Web Flasher oficial de Indy Open APRS para ESP8266 / NodeMCU.">
+  <title>Indy Open APRS — Web Flasher</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    :root {
+      --bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#657a7f;--accent:#0e7c86;
+      --accent-dark:#095a61;--line:#d9e5e7;--warning:#fff4d8;--warning-line:#d7a52b;
+      --ok:#e8f5ec;--ok-line:#4d9b62;--error:#fdeaea;--error-line:#c85c5c;
+      --esp-tools-button-color:#0e7c86;--esp-tools-button-text-color:#fff;--esp-tools-button-border-radius:12px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#e9f4f5 0,var(--bg) 280px);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+    a{color:var(--accent)} .wrap{width:min(920px,calc(100% - 32px));margin:0 auto;padding:36px 0 64px}
+    .hero{background:linear-gradient(135deg,var(--accent-dark),#1598a3);color:white;border-radius:22px;padding:34px}
+    .eyebrow{font-size:.9rem;opacity:.84;margin-bottom:5px} h1{margin:0;font-size:clamp(2rem,7vw,4.2rem);line-height:1;letter-spacing:-.04em}
+    .hero p{max-width:700px;font-size:1.05rem;margin-bottom:0}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:20px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+    h2{margin-top:0;color:var(--accent-dark)} h3{color:var(--accent-dark);margin-bottom:8px}
+    .version{display:inline-block;background:#e5f2f3;color:var(--accent-dark);padding:5px 10px;border-radius:999px;font-weight:700;font-size:.9rem}
+    .status{margin:14px 0;padding:12px 14px;border-radius:10px;background:var(--ok);border-left:4px solid var(--ok-line)}
+    .install{text-align:center;padding:18px 0 5px} .install p{color:var(--muted)}
+    .warning{background:var(--warning);border-left:4px solid var(--warning-line);padding:14px 16px;border-radius:10px;margin-top:18px}
+    .credentials{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .credential{border:1px solid var(--line);background:#f8fbfb;border-radius:12px;padding:12px}
+    code{background:#edf3f4;padding:2px 6px;border-radius:6px} ol{padding-left:1.3rem}
+    .meta{margin-top:16px;color:var(--muted);font-size:.84rem;overflow-wrap:anywhere}
+    .links{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+    .links a{text-decoration:none;border:1px solid var(--line);background:white;padding:9px 12px;border-radius:10px;font-weight:600}
+    footer{color:var(--muted);text-align:center;font-size:.9rem;margin-top:28px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.credentials{grid-template-columns:1fr}.hero{padding:26px 22px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Indy Open Project by XE3JAC</div>
+    <h1>INDY OPEN APRS</h1>
+    <p>Web Flasher para ESP8266 / NodeMCU. El firmware se sirve desde el mismo sitio de GitHub Pages para evitar errores de descarga del navegador.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <span class="version" id="versionBadge">Firmware v1.5.37</span>
+      <h2>Instalar firmware</h2>
+      <div class="status"><strong>Listo.</strong> El instalador utilizará <code>firmware/indy-open-latest.bin</code>.</div>
+
+      <div class="install">
+        <esp-web-install-button manifest="manifest.json">
+          <button slot="activate">Instalar Indy Open APRS</button>
+          <span slot="unsupported">Usa Google Chrome o Microsoft Edge en una computadora compatible con Web Serial.</span>
+          <span slot="not-allowed">El instalador necesita ejecutarse mediante HTTPS.</span>
+        </esp-web-install-button>
+        <p>Selecciona el puerto COM correspondiente a tu ESP8266 y continúa con el asistente.</p>
+      </div>
+
+      <div class="warning"><strong>Importante:</strong> este Web Flasher es únicamente para el <strong>ESP8266</strong>. No debe utilizarse para programar la Nano TNC / ATmega.</div>
+
+      <h3>Procedimiento</h3>
+      <ol>
+        <li>Conecta el ESP8266 / NodeMCU con un cable USB de datos.</li>
+        <li>Pulsa <strong>Instalar Indy Open APRS</strong>.</li>
+        <li>Selecciona el puerto COM.</li>
+        <li>Elige si deseas borrar completamente la memoria.</li>
+        <li>Confirma la instalación.</li>
+        <li>No desconectes el USB hasta que termine.</li>
+        <li>Reinicia el equipo y realiza la configuración inicial.</li>
+      </ol>
+    </section>
+
+    <aside class="card">
+      <h2>Firmware actual</h2>
+      <div class="meta">
+        <strong>Versión:</strong> v1.5.37<br>
+        <strong>Archivo instalado:</strong> indy-open-latest.bin<br>
+        <strong>Tamaño:</strong> 457,728 bytes<br>
+        <strong>SHA-256:</strong><br>f8f150deeb6b0f93a264aa74bf5fa4daeb77ee0058e59c0b7e0fa83e330794b2
+      </div>
+
+      <h2 style="margin-top:24px">Primera conexión</h2>
+      <div class="credentials">
+        <div class="credential"><strong>Usuario / SSID</strong><br><code>admin</code></div>
+        <div class="credential"><strong>Contraseña</strong><br><code>indygate</code></div>
+      </div>
+      <p class="warning"><strong>Seguridad:</strong> cambia las credenciales predeterminadas después de la primera configuración.</p>
+    </aside>
+  </div>
+
+  <div class="links">
+    <a href="../">← Manual Indy Open APRS</a>
+    <a href="https://github.com/XE3JAC/IndyOpen-APRS-Project/releases">Releases</a>
+  </div>
+  <footer>Indy Open APRS · Indy Open Project by XE3JAC</footer>
+</main>
+</body>
+</html>

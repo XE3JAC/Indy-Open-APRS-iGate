@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Manual completo de Indy Open APRS para ESP8266, Nano TNC y PCB TA1KNN.">
+<title>Indy Open APRS — Manual</title>
+<style>
+:root{--bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#61777c;--accent:#0e7c86;--dark:#0b2d33;--line:#d9e5e7;--soft:#eaf6f7}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+a{color:var(--accent)}.layout{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+aside{position:sticky;top:0;height:100vh;overflow:auto;background:var(--dark);color:#e8f5f6;padding:26px 20px}
+.brand{font-size:1.2rem;font-weight:800;margin-bottom:22px}.brand small{display:block;color:#9fc5ca;font-weight:500}
+nav a{display:block;text-decoration:none;color:#d7ecef;padding:7px 9px;border-radius:8px;font-size:.91rem}nav a:hover{background:#16444b}
+.hero{background:linear-gradient(135deg,#0b6670,#12939d);color:#fff;padding:64px clamp(24px,6vw,80px)}.hero>div,.content{max-width:1050px;margin:auto}
+.hero h1{font-size:clamp(2.5rem,7vw,5rem);margin:0;line-height:1}.hero p{max-width:760px;font-size:1.1rem}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.tag{border:1px solid #ffffff55;background:#ffffff18;padding:6px 10px;border-radius:999px}
+.content{padding:44px clamp(20px,5vw,70px) 90px}section{margin-bottom:56px;scroll-margin-top:16px}h2{color:#096a73;border-bottom:1px solid var(--line);padding-bottom:12px;font-size:2rem}h3{color:#0d7079;margin-top:30px}
+figure{margin:24px 0}figure img{display:block;width:100%;max-height:730px;object-fit:contain;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 8px 28px #17363b12}figcaption{text-align:center;color:var(--muted);font-size:.9rem;margin-top:7px}
+.note{background:var(--soft);border-left:4px solid var(--accent);padding:14px 17px;border-radius:10px;margin:18px 0}.warn{background:#fff3d7;border-left-color:#d6a125}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:17px}
+table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:11px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:#e8f3f4}
+.arch{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px;text-align:center;font-weight:700;font-size:1.05rem}
+footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
+.mobile{display:none;background:var(--dark);color:white;padding:12px 15px;position:sticky;top:0;z-index:10}
+@media(max-width:900px){.layout{display:block}aside{display:none}.mobile{display:block}.mobile a{color:white}}
+</style>
+</head>
+<body>
+<div class="mobile"><a href="#contenido">☰ Índice</a></div>
+<div class="layout">
+<aside>
+<div class="brand">INDY OPEN APRS<small>Manual de Usuario</small></div>
+<nav id="contenido">
+<a href="#general">1. Descripción general</a>
+<a href="#arquitectura">2. Arquitectura</a>
+<a href="#accesos">3. Accesos</a>
+<a href="#config">4. Configuración</a>
+<a href="#mensajes">5. Mensajes</a>
+<a href="#estado">6. Estado</a>
+<a href="#ota">7. OTA</a>
+<a href="#respaldo">8. Respaldo</a>
+<a href="#registro">9. Registro</a>
+<a href="#oled">10. OLED</a>
+<a href="#usb">11. USB</a>
+<a href="#tnc">12. Nano TNC</a>
+<a href="#webflasher">13. Web Flasher</a>
+<a href="#historia">14. Historia y créditos</a>
+<a href="#recomendaciones">15. Recomendaciones</a>
+</nav>
+</aside>
+<main>
+<header class="hero"><div>
+<div>Indy Open Project by XE3JAC</div>
+<h1>INDY OPEN APRS</h1>
+<p>Manual completo de instalación, configuración y operación para ESP8266 / NodeMCU, Nano TNC basada en ATmega y plataforma de hardware TA1KNN.</p>
+<div class="tags"><span class="tag">ESP8266</span><span class="tag">Nano TNC</span><span class="tag">TA1KNN</span><span class="tag">APRS-IS</span><span class="tag">RF</span></div>
+</div></header>
+<div class="content">
+
+<section id="general"><h2>1. Descripción general</h2>
+<p>Indy Open APRS proporciona una interfaz web para configurar y supervisar un sistema APRS basado en ESP8266 y Nano TNC. Desde ella se administran accesos, red, APRS-IS, estación, mensajes, estado, contactos, actualizaciones, respaldos y diagnóstico.</p>
+<div class="cards">
+<div class="card"><strong>Accesos</strong><p>AP local y credenciales OTA.</p></div>
+<div class="card"><strong>Configuración</strong><p>Red, APRS-IS, estación, TNC y telemetría.</p></div>
+<div class="card"><strong>Mensajes</strong><p>Mensajería APRS por RF o Internet.</p></div>
+<div class="card"><strong>Estado</strong><p>Diagnóstico, sensores y RF.</p></div>
+</div>
+<div class="note"><strong>Nota:</strong> los indicativos, IP, coordenadas y lecturas visibles en las capturas son ejemplos.</div>
+</section>
+
+<section id="arquitectura"><h2>2. Arquitectura del sistema</h2>
+<div class="arch">Radio ⇄ Nano TNC / ATmega ⇄ ESP8266 / NodeMCU ⇄ Wi-Fi / APRS-IS</div>
+<p>El ESP8266 ejecuta Indy Open APRS. La Nano TNC utiliza firmware independiente y atiende la comunicación APRS por RF mediante TNC/KISS.</p>
+</section>
+
+<section id="accesos"><h2>3. Accesos y seguridad</h2><figure><img loading="lazy" src="images/manual_01.png" alt="Pantalla Accesos y seguridad"><figcaption>Pantalla Accesos y seguridad</figcaption></figure>
+<p>Permite configurar el nombre y contraseña del AP local, además del usuario y contraseña utilizados para operaciones OTA.</p>
+<h3>Credenciales predeterminadas</h3>
+<table><thead><tr><th>Acceso</th><th>Usuario / SSID</th><th>Contraseña</th></tr></thead><tbody>
+<tr><td>Acceso OTA</td><td><code>admin</code></td><td><code>indygate</code></td></tr>
+<tr><td>Wi-Fi / Access Point</td><td><code>admin</code></td><td><code>indygate</code></td></tr>
+</tbody></table>
+<div class="note"><strong>Importante:</strong> estas son las credenciales iniciales. Por seguridad, se recomienda cambiarlas desde la sección <strong>Accesos</strong> después de la primera configuración.</div>
+<div class="note warn"><strong>Precaución:</strong> conserve las credenciales OTA en un lugar seguro.</div>
+</section>
+
+<section id="config"><h2>4. Configuración general</h2><figure><img loading="lazy" src="images/manual_02.png" alt="Configuración de red, APRS-IS y estación"><figcaption>Configuración de red, APRS-IS y estación</figcaption></figure>
+<h3>Modo de operación</h3><p>Determina la función principal del equipo: iGate, Digipeater o Tracker según la versión instalada.</p>
+<h3>Red</h3><p>Wi-Fi SSID, contraseña, DHCP/IP estática, máscara, gateway y DNS.</p>
+<h3>APRS-IS</h3><p>Indicativo, passcode, servidor, puerto y filtro APRS-IS.</p>
+<h3>Estación</h3><p>Latitud, longitud, símbolo, comentario, estado, intervalo de baliza y ruta RF.</p>
+<figure><img loading="lazy" src="images/manual_03.png" alt="TNC, tiempo, sistema y telemetría"><figcaption>TNC, tiempo, sistema y telemetría</figcaption></figure>
+<h3>TNC y tiempo</h3><p>Baud rate TNC, retardo DIGI, reinicio automático, UTC, NTP y potencia del AP.</p>
+<h3>Telemetría</h3><p>Incluye opciones relacionadas con beep, OLED, reenvío APRS-IS → RF, voltaje y sensores.</p>
+</section>
+
+<section id="mensajes"><h2>5. Mensajes APRS</h2><figure><img loading="lazy" src="images/manual_04.png" alt="Mensajes APRS"><figcaption>Mensajes APRS</figcaption></figure><figure><img loading="lazy" src="images/manual_05.png" alt="Selección de ruta"><figcaption>Selección de ruta</figcaption></figure>
+<ol><li>Introduzca el destino.</li><li>Escriba el mensaje.</li><li>Seleccione RF, Internet o RF + Internet.</li><li>Pulse Enviar mensaje.</li><li>Revise el historial.</li></ol>
+</section>
+
+<section id="estado"><h2>6. Estado y contactos</h2><figure><img loading="lazy" src="images/manual_06.png" alt="Estado general"><figcaption>Estado general</figcaption></figure>
+<p>La pantalla muestra tiempo encendido, red, APRS-IS, TNC/KISS, RX/TX RF, sensores, voltaje y OLED.</p>
+<figure><img loading="lazy" src="images/manual_07.png" alt="Contactos y actividad RF"><figcaption>Contactos y actividad RF</figcaption></figure><p>Contactos resume actividad RF reciente y estaciones recibidas.</p>
+</section>
+
+<section id="ota"><h2>7. Actualización OTA</h2><figure><img loading="lazy" src="images/manual_08.png" alt="Actualización OTA"><figcaption>Actualización OTA</figcaption></figure>
+<p>Seleccione un archivo <code>.bin</code> creado para el ESP8266, inicie la actualización y espere a que termine.</p>
+<div class="note warn"><strong>Precaución:</strong> no interrumpa la alimentación ni cierre la página durante la escritura.</div>
+</section>
+
+<section id="respaldo"><h2>8. Respaldo y restauración</h2><figure><img loading="lazy" src="images/manual_09.png" alt="Respaldo, restauración y borrado"><figcaption>Respaldo, restauración y borrado</figcaption></figure>
+<p>Permite descargar la configuración, restaurar un respaldo o borrar configuraciones conservando el firmware.</p>
+</section>
+
+<section id="registro"><h2>9. Registro</h2><figure><img loading="lazy" src="images/manual_10.png" alt="Registro del sistema"><figcaption>Registro del sistema</figcaption></figure>
+<p>Los filtros de diagnóstico incluyen Todo, Sistema, APRS-IS, RF / DIGI y Errores. También puede consultarse <code>log.txt</code>.</p>
+</section>
+
+<section id="oled"><h2>10. Pantalla OLED</h2><figure><img loading="lazy" src="images/manual_11.png" alt="Ayuda integrada y referencia OLED"><figcaption>Ayuda integrada y referencia OLED</figcaption></figure>
+<p>La OLED utilizada es de 0.96 pulgadas y 128×64 píxeles. Las tres vistas operativas son fijas y se cambia entre ellas pulsando el switch o botón físico del sistema.</p>
+<ul><li>Vista de sistema e iGate.</li><li>Vista TNC/KISS y RF.</li><li>Vista de sensores y estado I2C/OLED.</li></ul>
+<p>También puede mostrarse un bitmap monocromático 128×64 como pantalla de inicio.</p>
+</section>
+
+<section id="usb"><h2>11. Instalación inicial por USB</h2>
+<ol><li>Conecte el ESP8266 mediante un cable USB de datos.</li><li>Identifique el puerto serie.</li><li>Seleccione el firmware correcto.</li><li>Inicie la programación.</li><li>Espere la confirmación.</li><li>Reinicie y realice la configuración inicial usando las credenciales predeterminadas <code>admin</code> / <code>indygate</code>.</li></ol>
+</section>
+
+<section id="tnc"><h2>12. Nano TNC basada en ATmega</h2>
+<p>La Nano TNC es independiente del firmware Indy Open del ESP8266. Debe programarse con su firmware específico.</p>
+<ol><li>Conecte la Nano por USB.</li><li>Identifique el puerto.</li><li>Confirme ATmega/bootloader.</li><li>Cargue el firmware TNC.</li><li>Espere la verificación.</li><li>Reconecte la Nano al sistema.</li><li>Compruebe TNC/KISS desde Indy Open APRS.</li></ol>
+<p>La publicación histórica del proyecto acredita el firmware TNC a <strong>SQ9MDD</strong>.</p>
+</section>
+
+<section id="webflasher"><h2>13. Instalación mediante Web Flasher</h2>
+<p>El Web Flasher permite instalar el firmware del ESP8266 desde un navegador compatible utilizando USB.</p>
+<ol><li>Conecte el ESP8266.</li><li>Abra el Web Flasher.</li><li>Autorice el acceso al puerto serie.</li><li>Seleccione el puerto.</li><li>Seleccione la versión correspondiente.</li><li>Inicie la instalación.</li><li>Espere al 100 %.</li><li>Reinicie el equipo.</li></ol>
+<table><thead><tr><th>Método</th><th>Conexión</th><th>Uso</th></tr></thead><tbody>
+<tr><td>Web Flasher</td><td>USB</td><td>Primera instalación o recuperación</td></tr>
+<tr><td>OTA</td><td>Red</td><td>Actualización de un equipo ya operativo</td></tr>
+<tr><td>USB tradicional</td><td>USB</td><td>Programación manual</td></tr>
+</tbody></table>
+</section>
+
+<section id="historia"><h2>14. Historia y créditos</h2>
+<p>Indy Open APRS utiliza como plataforma física de referencia la PCB TA1KNN. El firmware Indy Open APRS es un desarrollo posterior para el ESP8266.</p>
+<table><thead><tr><th>Elemento</th><th>Autor / referencia</th></tr></thead><tbody>
+<tr><td>PCB / hardware</td><td><strong>TA1KNN</strong></td></tr>
+<tr><td>Firmware ESP del proyecto histórico</td><td><strong>HS3LSE</strong></td></tr>
+<tr><td>Firmware TNC</td><td><strong>SQ9MDD</strong></td></tr>
+<tr><td>Firmware actual</td><td><strong>Indy Open APRS / XE3JAC</strong></td></tr>
+</tbody></table>
+<p>Se recomienda conservar las licencias, avisos y créditos que acompañen cualquier componente de terceros que se distribuya con el proyecto.</p>
+</section>
+
+<section id="recomendaciones"><h2>15. Recomendaciones</h2>
+<ul><li>Configure accesos y red antes de operar.</li><li>Cambie las credenciales predeterminadas <code>admin</code> / <code>indygate</code> después de la primera configuración.</li><li>Verifique el modo de operación.</li><li>Compruebe indicativo, posición y ruta RF.</li><li>Use Estado y Registro para diagnóstico.</li><li>Realice un respaldo de una configuración estable.</li><li>Mantenga alimentación estable durante OTA y Web Flasher.</li><li>No mezcle el firmware del ESP8266 con el de la Nano TNC.</li></ul>
+</section>
+
+<footer>
+
+  <div class="donaciones">
+    <h3>❤️ Apoya Indy Open APRS</h3>
+
+    <p>
+      Si este proyecto te resulta útil y deseas colaborar con su
+      desarrollo y mantenimiento, puedes apoyarlo mediante PayPal.
+    </p>
+
+    <form action="https://www.paypal.com/donate" method="post" target="_top">
+      <input type="hidden" name="hosted_button_id" value="2RX7AT3HP4RNG" />
+
+      <input
+        type="image"
+        src="https://www.paypalobjects.com/es_XC/MX/i/btn/btn_donateCC_LG.gif"
+        border="0"
+        name="submit"
+        title="Apoya Indy Open APRS mediante PayPal"
+        alt="Donar con PayPal"
+      />
+
+      <img
+        alt=""
+        border="0"
+        src="https://www.paypal.com/es_MX/i/scr/pixel.gif"
+        width="1"
+        height="1"
+      />
+    </form>
+  </div>
+
+  <p>
+    Indy Open APRS · Indy Open Project by XE3JAC
+  </p>
+
+</footer>
+  
+</div>
+</main>
+</div>
+</body>
+</html>
