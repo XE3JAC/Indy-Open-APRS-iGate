@@ -536,8 +536,9 @@ async function flashImage(){
 
   try{ await command(LEAVE_PROGMODE, [], 0, 800); }catch(e){}
   progress(100);
-  setResult("Programación y verificación completadas correctamente.", "ok");
+  setResult("Programación y verificación completadas correctamente. Ya puedes desconectar la TNC.", "ok");
   log("ÉXITO: firmware programado y verificado.");
+  log("Ya puedes desconectar la TNC.");
   log("La TNC puede reiniciarse y operar normalmente a 19200 baud.");
 
   $("connectBtn").disabled = false;
