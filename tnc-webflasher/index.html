@@ -86,6 +86,7 @@ Listo.</pre>
         <li>No desconectes el USB durante la programación y verificación.</li>
       </ol>
       <div class="status"><strong>Programación:</strong> ATmega328P · 115200 baud</div>
+      <div class="status"><strong>Firmware:</strong> se obtiene automáticamente de la versión publicada más reciente.</div>
     </aside>
   </div>
 
@@ -121,6 +122,7 @@ let detectedVersion = "";
 const GITHUB_REPO = "XE3JAC/IndyOpen-APRS-Project";
 const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`;
 const TNC_ASSET_RE = /^indy-open-tnc-v(.+)\.hex$/i;
+const LOCAL_FALLBACK_URL = "firmware/indy-open-tnc-latest.hex";
 
 async function detectLatestTncFirmware(){
   log("Buscando la versión más reciente de Indy Open TNC en GitHub Releases…");
@@ -166,22 +168,85 @@ async function loadDetectedFirmware(){
   if(!firmwareUrl) await detectLatestTncFirmware();
 
   setResult(`Cargando Indy Open TNC v${detectedVersion}…`);
-  log("Descargando firmware desde GitHub Releases mediante API…");
 
-  const response = await fetch(firmwareUrl, {
-    cache: "no-store",
-    headers: {
-      "Accept": "application/octet-stream",
-      "X-GitHub-Api-Version": "2022-11-28"
-    }
-  });
-  if(!response.ok){
-    throw new Error(`No se pudo descargar el firmware desde GitHub (${response.status}).`);
+  let text = null;
+  let lastError = null;
+
+  // Intento 1: descargar el asset desde la API de GitHub.
+  try{
+    log("Intento 1/3: descargando firmware desde GitHub Releases mediante API…");
+    const response = await fetch(firmwareUrl, {
+      cache: "no-store",
+      headers: {
+        "Accept": "application/octet-stream",
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
+    });
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    text = await response.text();
+    if(!text.trim().startsWith(":")) throw new Error("La respuesta no parece un archivo Intel HEX.");
+    log("Firmware descargado correctamente desde la API de GitHub.");
+  }catch(e){
+    lastError = e;
+    log(`Aviso: descarga por API falló (${e.message || e}).`);
   }
 
-  const text = await response.text();
+  // Intento 2: descarga directa del asset del Release.
+  if(text === null){
+    try{
+      log("Intento 2/3: descargando directamente el asset del Release…");
+      const releasesResponse = await fetch(RELEASES_API, {
+        cache: "no-store",
+        headers: { "Accept": "application/vnd.github+json" }
+      });
+      if(!releasesResponse.ok) throw new Error(`HTTP ${releasesResponse.status}`);
+      const releases = await releasesResponse.json();
+
+      let directUrl = null;
+      for(const release of releases){
+        if(release.draft || release.prerelease) continue;
+        const asset = (release.assets || []).find(a => a.name === selectedName);
+        if(asset){
+          directUrl = asset.browser_download_url;
+          break;
+        }
+      }
+      if(!directUrl) throw new Error("No se encontró la URL directa del asset.");
+
+      const response = await fetch(directUrl, {cache:"no-store", redirect:"follow"});
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      text = await response.text();
+      if(!text.trim().startsWith(":")) throw new Error("La respuesta no parece un archivo Intel HEX.");
+      log("Firmware descargado correctamente desde el asset del Release.");
+    }catch(e){
+      lastError = e;
+      log(`Aviso: descarga directa falló (${e.message || e}).`);
+    }
+  }
+
+  // Intento 3: archivo local servido desde el mismo GitHub Pages.
+  if(text === null){
+    try{
+      log("Intento 3/3: usando firmware local de respaldo…");
+      const response = await fetch(`${LOCAL_FALLBACK_URL}?v=${encodeURIComponent(detectedVersion || Date.now())}`, {
+        cache: "no-store"
+      });
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      text = await response.text();
+      if(!text.trim().startsWith(":")) throw new Error("El archivo local no parece un Intel HEX válido.");
+      log("Firmware local de respaldo cargado correctamente.");
+    }catch(e){
+      lastError = e;
+      log(`ERROR: también falló el firmware local (${e.message || e}).`);
+      throw new Error(
+        "No fue posible descargar el firmware. Verifica que exista " +
+        LOCAL_FALLBACK_URL + " en la carpeta del Web Flasher."
+      );
+    }
+  }
+
   image = parseIntelHex(text);
-  log(`Firmware listo: ${selectedName} (${image.dataBytes} bytes HEX).`);
+  log(`Firmware listo: ${selectedName || "indy-open-tnc-latest.hex"} (${image.dataBytes} bytes HEX).`);
 }
 
 const $ = (id) => document.getElementById(id);
