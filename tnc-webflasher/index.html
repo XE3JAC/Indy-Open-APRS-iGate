@@ -1,1 +1,483 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Web Flasher Indy Open APRS para Nano TNC ATmega328P / CH340.">
+  <title>Indy Open APRS — TNC Web Flasher</title>
+  <style>
+    :root{
+      --bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#657a7f;--accent:#0e7c86;
+      --accent-dark:#095a61;--line:#d9e5e7;--warning:#fff4d8;--warning-line:#d7a52b;
+      --ok:#e8f5ec;--ok-line:#4d9b62;--error:#fdeaea;--error-line:#c85c5c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#e9f4f5 0,var(--bg) 280px);
+      color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+    .wrap{width:min(980px,calc(100% - 32px));margin:0 auto;padding:36px 0 64px}
+    .hero{background:linear-gradient(135deg,var(--accent-dark),#1598a3);color:white;border-radius:22px;padding:34px}
+    .eyebrow{font-size:.9rem;opacity:.84;margin-bottom:5px}
+    h1{margin:0;font-size:clamp(2rem,7vw,4.2rem);line-height:1;letter-spacing:-.04em}
+    .hero p{max-width:760px;font-size:1.05rem;margin-bottom:0}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:20px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+    h2{margin-top:0;color:var(--accent-dark)} h3{color:var(--accent-dark);margin-bottom:8px}
+    .version{display:inline-block;background:#e5f2f3;color:var(--accent-dark);padding:5px 10px;border-radius:999px;font-weight:700;font-size:.9rem}
+    .status{margin:14px 0;padding:12px 14px;border-radius:10px;background:#f8fbfb;border-left:4px solid var(--line)}
+    .status.ok{background:var(--ok);border-left-color:var(--ok-line)}
+    .status.error{background:var(--error);border-left-color:var(--error-line)}
+    .warning{background:var(--warning);border-left:4px solid var(--warning-line);padding:14px 16px;border-radius:10px;margin-top:18px}
+    button,.file-label{appearance:none;border:0;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;
+      font-weight:700;font-size:1rem;cursor:pointer;display:inline-block;text-align:center}
+    button:hover,.file-label:hover{background:var(--accent-dark)}
+    button.secondary{background:#e5f2f3;color:var(--accent-dark)}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    input[type=file]{display:none}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .progress{width:100%;height:16px;border-radius:999px;background:#e8eff0;overflow:hidden;margin:12px 0}
+    .progress>div{height:100%;width:0;background:var(--accent);transition:width .15s}
+    .meta{color:var(--muted);font-size:.9rem}
+    code{background:#edf3f4;padding:2px 6px;border-radius:6px}
+    pre{background:#102a2e;color:#d8f0f2;padding:14px;border-radius:12px;max-height:280px;overflow:auto;font-size:.82rem;white-space:pre-wrap}
+    ol{padding-left:1.3rem}
+    footer{color:var(--muted);text-align:center;font-size:.9rem;margin-top:28px}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.hero{padding:26px 22px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Indy Open Project by XE3JAC</div>
+    <h1>TNC WEB FLASHER</h1>
+    <p>Programador web para la Nano TNC basada en ATmega328P con interfaz USB CH340. Usa Web Serial y el bootloader serie del Arduino Nano.</p>
+  </section>
 
+  <div class="grid">
+    <section class="card">
+      <span class="version">Indy Open TNC · buscando última versión…</span>
+      <h2 style="margin-top:14px">Instalar firmware TNC</h2>
+
+      <div id="supportStatus" class="status"></div>
+
+      <div class="actions">
+        <button id="connectBtn">1. Conectar Nano TNC</button>
+        <button id="flashBtn" disabled>2. Instalar Indy Open TNC</button>
+      </div>
+
+      <div class="status">
+        <strong>Firmware:</strong> <span id="fileName">buscando en GitHub Releases…</span><br>
+        <strong>Puerto:</strong> <span id="portName">no conectado</span><br>
+        <strong>Programación:</strong> 57600 baud (bootloader Nano antiguo)<br>
+        <strong>Operación TNC:</strong> 19200 baud
+      </div>
+
+      <div class="progress"><div id="progressBar"></div></div>
+      <div id="resultStatus" class="status">Esperando conexión.</div>
+
+      <h3>Registro</h3>
+      <pre id="log">Indy Open APRS — TNC Web Flasher
+Listo.</pre>
+
+      <div class="warning">
+        <strong>Importante:</strong> durante la programación desconecta, si es posible, la Nano TNC del resto del circuito Indy y deja únicamente el USB conectado. No retires el cable hasta que la verificación termine.
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2>Firmware disponible</h2>
+      <p>La página busca automáticamente en los <strong>GitHub Releases</strong> el release publicado más reciente que contenga un archivo con este formato:</p>
+      <p><code>indy-open-tnc-vVERSION.hex</code></p>
+      <p>Ejemplo: <code>indy-open-tnc-v0.15.6.hex</code></p>
+      <h2>Datos confirmados</h2>
+      <p>Según el procedimiento histórico de esta TNC:</p>
+      <ul>
+        <li>Arduino Nano con <strong>ATmega328P</strong>.</li>
+        <li>Convertidor USB-serie <strong>CH340</strong>.</li>
+        <li>XLoader configurado como <strong>Duemilanove/Nano (ATmega328)</strong>.</li>
+        <li>Velocidad de carga: <strong>57600 baud</strong>.</li>
+        <li>Velocidad normal de la TNC: <strong>19200 baud</strong>.</li>
+        <li>Firmware probado históricamente: <strong>TNC v0.15.4</strong>.</li>
+      </ul>
+
+      <h2 style="margin-top:24px">Procedimiento</h2>
+      <ol>
+        <li>Conecta la Nano por USB.</li>
+        <li>Pulsa <strong>Conectar Nano TNC</strong> y selecciona su puerto COM.</li>
+        <li>Pulsa <strong>Instalar Indy Open TNC</strong>.</li>
+        <li>El flasher reiniciará la Nano, sincronizará el bootloader y escribirá la memoria.</li>
+        <li>Al terminar, leerá de nuevo la memoria y verificará el contenido.</li>
+      </ol>
+
+      <div class="warning">
+        Compatible con Chrome/Edge de escritorio y una página servida por <strong>HTTPS</strong> (GitHub Pages funciona).
+      </div>
+    </aside>
+  </div>
+
+  <footer>Indy Open APRS · Indy Open Project by XE3JAC</footer>
+</main>
+
+<script>
+"use strict";
+
+const STK_OK      = 0x10;
+const STK_INSYNC  = 0x14;
+const CRC_EOP     = 0x20;
+const GET_SYNC    = 0x30;
+const ENTER_PROGMODE = 0x50;
+const LEAVE_PROGMODE = 0x51;
+const LOAD_ADDRESS   = 0x55;
+const PROG_PAGE      = 0x64;
+const READ_PAGE      = 0x74;
+
+const BAUD = 57600;
+const PAGE_SIZE = 128;
+const FLASH_LIMIT = 32768;
+
+let port = null;
+let reader = null;
+let writer = null;
+let image = null;
+let imageMax = 0;
+let selectedName = "";
+let firmwareUrl = "";
+let detectedVersion = "";
+
+const GITHUB_REPO = "XE3JAC/IndyOpen-APRS-Project";
+const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`;
+const TNC_ASSET_RE = /^indy-open-tnc-v(.+)\.hex$/i;
+
+async function detectLatestTncFirmware(){
+  log("Buscando la versión más reciente de Indy Open TNC en GitHub Releases…");
+
+  const response = await fetch(RELEASES_API, {
+    cache: "no-store",
+    headers: { "Accept": "application/vnd.github+json" }
+  });
+  if(!response.ok){
+    throw new Error(`No se pudieron consultar los Releases de GitHub (${response.status}).`);
+  }
+
+  const releases = await response.json();
+
+  // Recorremos los releases publicados desde el más reciente y tomamos
+  // el primer asset cuyo nombre sea indy-open-tnc-v*.hex.
+  for(const release of releases){
+    if(release.draft || release.prerelease) continue;
+
+    const asset = (release.assets || []).find(a => TNC_ASSET_RE.test(a.name));
+    if(asset){
+      const m = asset.name.match(TNC_ASSET_RE);
+      detectedVersion = m ? m[1] : release.tag_name;
+      selectedName = asset.name;
+      firmwareUrl = asset.browser_download_url;
+
+      const badge = document.querySelector(".version");
+      if(badge){
+        badge.textContent = `Indy Open TNC v${detectedVersion} · ATmega328P · 57600 baud`;
+      }
+
+      $("fileName").textContent = `${selectedName} (${(asset.size/1024).toFixed(1)} KB)`;
+      log(`Firmware detectado: ${selectedName}`);
+      log(`Release: ${release.name || release.tag_name}`);
+      return;
+    }
+  }
+
+  throw new Error("No se encontró ningún firmware TNC compatible en los Releases. El archivo debe llamarse indy-open-tnc-vVERSION.hex.");
+}
+
+async function loadDetectedFirmware(){
+  if(!firmwareUrl) await detectLatestTncFirmware();
+
+  setResult(`Cargando Indy Open TNC v${detectedVersion}…`);
+  log("Descargando firmware desde GitHub Releases…");
+
+  const response = await fetch(firmwareUrl, {cache:"no-store"});
+  if(!response.ok){
+    throw new Error(`No se pudo descargar el firmware (${response.status}).`);
+  }
+
+  const text = await response.text();
+  image = parseIntelHex(text);
+  log(`Firmware listo: ${selectedName} (${image.dataBytes} bytes HEX).`);
+}
+
+const $ = (id) => document.getElementById(id);
+const logEl = $("log");
+
+function log(msg){
+  const now = new Date().toLocaleTimeString();
+  logEl.textContent += `\n[${now}] ${msg}`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function setResult(text, cls=""){
+  const el = $("resultStatus");
+  el.className = "status" + (cls ? " " + cls : "");
+  el.textContent = text;
+}
+function progress(p){
+  $("progressBar").style.width = `${Math.max(0,Math.min(100,p))}%`;
+}
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function parseIntelHex(text){
+  const mem = new Uint8Array(FLASH_LIMIT);
+  mem.fill(0xFF);
+  let upper = 0, maxAddr = -1, dataBytes = 0;
+
+  const lines = text.replace(/\r/g,"").split("\n").map(s=>s.trim()).filter(Boolean);
+  for(let lineNo=0; lineNo<lines.length; lineNo++){
+    const line = lines[lineNo];
+    if(!line.startsWith(":")) throw new Error(`HEX inválido en línea ${lineNo+1}`);
+    const raw = line.slice(1);
+    if(raw.length < 10 || raw.length % 2) throw new Error(`Registro HEX inválido en línea ${lineNo+1}`);
+
+    const bytes = new Uint8Array(raw.length/2);
+    for(let i=0;i<bytes.length;i++){
+      const v = Number.parseInt(raw.slice(i*2,i*2+2),16);
+      if(Number.isNaN(v)) throw new Error(`Dato hexadecimal inválido en línea ${lineNo+1}`);
+      bytes[i]=v;
+    }
+    let sum=0; for(const b of bytes) sum=(sum+b)&0xFF;
+    if(sum!==0) throw new Error(`Checksum HEX incorrecto en línea ${lineNo+1}`);
+
+    const len=bytes[0], addr=(bytes[1]<<8)|bytes[2], type=bytes[3];
+    if(len+5!==bytes.length) throw new Error(`Longitud HEX incorrecta en línea ${lineNo+1}`);
+
+    if(type===0x00){
+      const absolute = upper + addr;
+      if(absolute+len > FLASH_LIMIT) throw new Error("El .HEX excede los 32 KB del ATmega328P.");
+      mem.set(bytes.slice(4,4+len), absolute);
+      maxAddr=Math.max(maxAddr, absolute+len-1);
+      dataBytes += len;
+    }else if(type===0x01){
+      break;
+    }else if(type===0x02){
+      upper = (((bytes[4]<<8)|bytes[5]) << 4) >>> 0;
+    }else if(type===0x04){
+      upper = (((bytes[4]<<8)|bytes[5]) << 16) >>> 0;
+    }
+  }
+  if(maxAddr < 0) throw new Error("El archivo HEX no contiene datos.");
+  return {mem, maxAddr, dataBytes};
+}
+
+async function openPort(){
+  if(!("serial" in navigator)) throw new Error("Este navegador no soporta Web Serial. Usa Chrome o Edge de escritorio.");
+  port = await navigator.serial.requestPort({
+    filters: [{usbVendorId:0x1A86}]
+  }).catch(async err => {
+    // Si el filtro CH340 no encuentra la placa, permitir seleccionar cualquier puerto.
+    if(err.name === "NotFoundError") throw err;
+    return navigator.serial.requestPort();
+  });
+
+  await port.open({baudRate:BAUD, bufferSize:4096});
+  writer = port.writable.getWriter();
+  reader = port.readable.getReader();
+  $("portName").textContent = "conectado a 57600 baud";
+  log("Puerto serie abierto.");
+}
+
+async function resetBoard(){
+  // La transición DTR provoca el auto-reset de la mayoría de Nano/CH340.
+  try{
+    await port.setSignals({dataTerminalReady:false, requestToSend:false});
+    await sleep(120);
+    await port.setSignals({dataTerminalReady:true, requestToSend:false});
+    await sleep(80);
+    await port.setSignals({dataTerminalReady:false, requestToSend:false});
+  }catch(e){
+    log("Aviso: no fue posible controlar DTR/RTS; se intentará sincronizar de todos modos.");
+  }
+  await sleep(650);
+  await drain(120);
+}
+
+async function drain(ms=100){
+  const end=Date.now()+ms;
+  while(Date.now()<end){
+    try{
+      const r=await Promise.race([
+        reader.read(),
+        new Promise(resolve=>setTimeout(()=>resolve({timeout:true}),20))
+      ]);
+      if(r && r.timeout) continue;
+      if(r && r.done) break;
+    }catch{ break; }
+  }
+}
+
+async function writeBytes(arr){
+  await writer.write(new Uint8Array(arr));
+}
+
+async function readExact(count, timeout=1000){
+  const out = [];
+  const deadline = Date.now()+timeout;
+  while(out.length<count){
+    const left=deadline-Date.now();
+    if(left<=0) throw new Error(`Timeout esperando ${count} bytes del bootloader.`);
+    const r = await Promise.race([
+      reader.read(),
+      new Promise(resolve=>setTimeout(()=>resolve({timeout:true}), Math.min(left,80)))
+    ]);
+    if(r && r.timeout) continue;
+    if(r.done) throw new Error("El puerto serie se cerró.");
+    if(r.value) for(const b of r.value) out.push(b);
+  }
+  return new Uint8Array(out.slice(0,count));
+}
+
+async function command(cmd, payload=[], responseDataLen=0, timeout=1000){
+  await writeBytes([cmd, ...payload, CRC_EOP]);
+  const first = await readExact(1, timeout);
+  if(first[0]!==STK_INSYNC) throw new Error(`Bootloader fuera de sincronía (0x${first[0].toString(16).padStart(2,"0")}).`);
+  const data = responseDataLen ? await readExact(responseDataLen, timeout) : new Uint8Array();
+  const last = await readExact(1, timeout);
+  if(last[0]!==STK_OK) throw new Error(`El bootloader respondió error (0x${last[0].toString(16).padStart(2,"0")}).`);
+  return data;
+}
+
+async function syncBootloader(){
+  for(let attempt=1; attempt<=8; attempt++){
+    try{
+      await writeBytes([GET_SYNC, CRC_EOP]);
+      const r = await readExact(2, 350);
+      if(r[0]===STK_INSYNC && r[1]===STK_OK){
+        log(`Bootloader sincronizado (intento ${attempt}).`);
+        return;
+      }
+    }catch(e){}
+    await sleep(120);
+  }
+  throw new Error("No se pudo sincronizar con el bootloader a 57600 baud. Verifica que sea Nano ATmega328P con bootloader antiguo y que ninguna otra aplicación use el COM.");
+}
+
+async function loadAddress(byteAddress){
+  const wordAddress = byteAddress >> 1;
+  await command(LOAD_ADDRESS, [wordAddress & 0xFF, (wordAddress>>8)&0xFF], 0, 800);
+}
+
+async function programPage(addr, data){
+  await loadAddress(addr);
+  const len=data.length;
+  await command(PROG_PAGE, [(len>>8)&0xFF, len&0xFF, 0x46, ...data], 0, 1600); // 'F'
+}
+
+async function readPage(addr, len){
+  await loadAddress(addr);
+  return await command(READ_PAGE, [(len>>8)&0xFF, len&0xFF, 0x46], len, 1600);
+}
+
+async function flashImage(){
+  if(!port || !writer || !reader) throw new Error("Primero conecta la Nano TNC.");
+  if(!image) throw new Error("No se pudo cargar el firmware integrado.");
+
+  $("flashBtn").disabled = true;
+  $("connectBtn").disabled = true;
+  progress(0);
+  setResult("Entrando al bootloader…");
+  log(`Iniciando programación de ${selectedName}.`);
+  log(`Datos HEX: ${image.dataBytes} bytes; dirección máxima: 0x${image.maxAddr.toString(16).toUpperCase()}.`);
+
+  await resetBoard();
+  await syncBootloader();
+
+  try{ await command(ENTER_PROGMODE, [], 0, 800); }catch(e){ log("El bootloader no confirmó ENTER_PROGMODE; continuamos."); }
+
+  const end = Math.ceil((image.maxAddr+1)/PAGE_SIZE)*PAGE_SIZE;
+  log(`Escritura: ${end/PAGE_SIZE} páginas de hasta ${PAGE_SIZE} bytes.`);
+
+  for(let addr=0; addr<end; addr+=PAGE_SIZE){
+    const page=image.mem.slice(addr, Math.min(addr+PAGE_SIZE,end));
+    await programPage(addr,page);
+    progress(((addr+page.length)/end)*70);
+  }
+
+  setResult("Firmware escrito. Verificando memoria…");
+  log("Escritura completa. Iniciando verificación.");
+
+  for(let addr=0; addr<end; addr+=PAGE_SIZE){
+    const len=Math.min(PAGE_SIZE,end-addr);
+    const got=await readPage(addr,len);
+    for(let i=0;i<len;i++){
+      if(got[i]!==image.mem[addr+i]){
+        throw new Error(`Verificación falló en 0x${(addr+i).toString(16).toUpperCase()}: leído 0x${got[i].toString(16)}, esperado 0x${image.mem[addr+i].toString(16)}.`);
+      }
+    }
+    progress(70+((addr+len)/end)*30);
+  }
+
+  try{ await command(LEAVE_PROGMODE, [], 0, 800); }catch(e){}
+  progress(100);
+  setResult("Programación y verificación completadas correctamente.", "ok");
+  log("ÉXITO: firmware programado y verificado.");
+  log("La TNC puede reiniciarse y operar normalmente a 19200 baud.");
+
+  $("connectBtn").disabled = false;
+  $("flashBtn").disabled = false;
+}
+
+async function closePort(){
+  try{ if(reader){ await reader.cancel(); reader.releaseLock(); reader=null; } }catch(e){}
+  try{ if(writer){ writer.releaseLock(); writer=null; } }catch(e){}
+  try{ if(port){ await port.close(); port=null; } }catch(e){}
+}
+
+$("connectBtn").addEventListener("click", async()=>{
+  try{
+    if(port) await closePort();
+    setResult("Selecciona el puerto COM de la Nano TNC.");
+    await openPort();
+    if(!image){
+      await loadDetectedFirmware();
+    }
+    setResult(`Nano TNC conectada. Lista para instalar Indy Open TNC v${detectedVersion}.`, "ok");
+    $("flashBtn").textContent = `2. Instalar Indy Open TNC v${detectedVersion}`;
+    $("flashBtn").disabled = false;
+  }catch(e){
+    setResult(e.message || String(e), "error");
+    log("ERROR: "+(e.message||e));
+  }
+});
+
+
+$("flashBtn").addEventListener("click", async()=>{
+  if(!confirm("Se sobrescribirá el firmware de la Nano TNC. ¿Deseas continuar?")) return;
+  try{
+    await flashImage();
+  }catch(e){
+    setResult(e.message||String(e),"error");
+    log("ERROR: "+(e.message||e));
+    progress(0);
+    try{ await closePort(); }catch{}
+    $("portName").textContent="desconectado";
+    $("connectBtn").disabled=false;
+    $("flashBtn").disabled=true;
+  }
+});
+
+window.addEventListener("beforeunload", ()=>{ try{ closePort(); }catch(e){} });
+
+detectLatestTncFirmware()
+  .then(() => {
+    setResult(`Firmware detectado: Indy Open TNC v${detectedVersion}. Conecta la Nano TNC.`, "ok");
+  })
+  .catch(e => {
+    setResult(e.message || String(e), "error");
+    log("ERROR RELEASES: " + (e.message || e));
+  });
+
+if("serial" in navigator){
+  $("supportStatus").className="status ok";
+  $("supportStatus").innerHTML="<strong>Navegador compatible.</strong> Web Serial está disponible.";
+}else{
+  $("supportStatus").className="status error";
+  $("supportStatus").innerHTML="<strong>Web Serial no disponible.</strong> Abre esta página con Chrome o Edge de escritorio mediante HTTPS.";
+  $("connectBtn").disabled=true;
+}
+</script>
+</body>
+</html>
