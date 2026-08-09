@@ -66,7 +66,7 @@
       <div class="status">
         <strong>Firmware:</strong> <span id="fileName">buscando en GitHub Releases…</span><br>
         <strong>Puerto:</strong> <span id="portName">no conectado</span><br>
-        <strong>Programación:</strong> 57600 baud (bootloader)<br></div>
+        <strong>Programación:</strong> 115200 baud (Arduino Uno / Optiboot)<br></div>
 
       <div class="progress"><div id="progressBar"></div></div>
       <div id="resultStatus" class="status">Esperando conexión.</div>
@@ -85,7 +85,7 @@ Listo.</pre>
         <li>Pulsa <strong>Instalar Indy Open TNC</strong>.</li>
         <li>No desconectes el USB durante la programación y verificación.</li>
       </ol>
-      <div class="status"><strong>Programación:</strong> ATmega328P · 57600 baud</div>
+      <div class="status"><strong>Programación:</strong> Arduino Uno / ATmega328P · 115200 baud</div>
       <div class="status"><strong>Firmware:</strong> se obtiene automáticamente de la versión publicada más reciente.</div>
     </aside>
   </div>
@@ -106,13 +106,16 @@ const LOAD_ADDRESS   = 0x55;
 const PROG_PAGE      = 0x64;
 const READ_PAGE      = 0x74;
 
-const BAUD = 57600;
+const BAUD = 115200;
 const PAGE_SIZE = 128;
 const FLASH_LIMIT = 32768;
 
 let port = null;
 let reader = null;
 let writer = null;
+let rxPumpRunning = false;
+let rxBuffer = [];
+let rxWaiters = [];
 let image = null;
 let imageMax = 0;
 let selectedName = "";
@@ -151,7 +154,7 @@ async function detectLatestTncFirmware(){
 
       const badge = document.querySelector(".version");
       if(badge){
-        badge.textContent = `Indy Open TNC v${detectedVersion} · ATmega328P · 57600 baud`;
+        badge.textContent = `Indy Open TNC v${detectedVersion} · Arduino Uno / ATmega328P · 115200 baud`;
       }
 
       $("fileName").textContent = `${selectedName} (${(asset.size/1024).toFixed(1)} KB)`;
@@ -311,48 +314,90 @@ function parseIntelHex(text){
 
 async function openPort(){
   if(!("serial" in navigator)) throw new Error("Este navegador no soporta Web Serial. Usa Chrome o Edge de escritorio.");
+
   port = await navigator.serial.requestPort({
     filters: [{usbVendorId:0x1A86}]
-  }).catch(async err => {
-    // Si el filtro CH340 no encuentra la placa, permitir seleccionar cualquier puerto.
-    if(err.name === "NotFoundError") throw err;
-    return navigator.serial.requestPort();
   });
 
-  await port.open({baudRate:BAUD, bufferSize:4096});
+  await port.open({
+    baudRate: BAUD,
+    dataBits: 8,
+    stopBits: 1,
+    parity: "none",
+    flowControl: "none",
+    bufferSize: 4096
+  });
+
   writer = port.writable.getWriter();
   reader = port.readable.getReader();
-  $("portName").textContent = "conectado a 57600 baud";
-  log("Puerto serie abierto.");
+
+  rxBuffer = [];
+  rxWaiters = [];
+  startRxPump();
+
+  $("portName").textContent = `conectado a ${BAUD} baud`;
+  log(`Puerto serie abierto a ${BAUD} baud.`);
+}
+
+function startRxPump(){
+  if(rxPumpRunning) return;
+  rxPumpRunning = true;
+
+  (async()=>{
+    try{
+      while(rxPumpRunning && reader){
+        const {value, done} = await reader.read();
+        if(done) break;
+        if(!value) continue;
+
+        for(const b of value) rxBuffer.push(b);
+
+        while(rxWaiters.length && rxBuffer.length){
+          const waiter = rxWaiters.shift();
+          const bytes = rxBuffer.splice(0, Math.min(waiter.count, rxBuffer.length));
+          waiter.resolve(bytes);
+        }
+      }
+    }catch(e){
+      if(rxPumpRunning) log(`Aviso de lectura serie: ${e.message || e}`);
+    }finally{
+      rxPumpRunning = false;
+    }
+  })();
+}
+
+function clearRxBuffer(){
+  rxBuffer.length = 0;
 }
 
 async function resetBoard(){
-  // La transición DTR provoca el auto-reset de la mayoría de Nano/CH340.
+  clearRxBuffer();
+
+  /*
+    Perfil objetivo confirmado con XLoader:
+    Uno (ATmega328) / Optiboot / 115200 baud.
+
+    En Arduino UNO/Nano con auto-reset, DTR se acopla al pin RESET mediante
+    un capacitor. La transición de DTR abre la ventana del bootloader.
+  */
   try{
+    // Estado inactivo.
     await port.setSignals({dataTerminalReady:false, requestToSend:false});
-    await sleep(120);
-    await port.setSignals({dataTerminalReady:true, requestToSend:false});
-    await sleep(80);
+    await sleep(100);
+
+    // Pulso de auto-reset.
+    await port.setSignals({dataTerminalReady:true, requestToSend:true});
+    await sleep(100);
+
+    // Liberar las líneas.
     await port.setSignals({dataTerminalReady:false, requestToSend:false});
   }catch(e){
-    log("Aviso: no fue posible controlar DTR/RTS; se intentará sincronizar de todos modos.");
+    log("Aviso: el navegador no pudo controlar DTR/RTS.");
   }
-  await sleep(650);
-  await drain(120);
-}
 
-async function drain(ms=100){
-  const end=Date.now()+ms;
-  while(Date.now()<end){
-    try{
-      const r=await Promise.race([
-        reader.read(),
-        new Promise(resolve=>setTimeout(()=>resolve({timeout:true}),20))
-      ]);
-      if(r && r.timeout) continue;
-      if(r && r.done) break;
-    }catch{ break; }
-  }
+  // Optiboot necesita un breve tiempo para iniciar después del reset.
+  await sleep(250);
+  clearRxBuffer();
 }
 
 async function writeBytes(arr){
@@ -361,19 +406,41 @@ async function writeBytes(arr){
 
 async function readExact(count, timeout=1000){
   const out = [];
-  const deadline = Date.now()+timeout;
-  while(out.length<count){
-    const left=deadline-Date.now();
-    if(left<=0) throw new Error(`Timeout esperando ${count} bytes del bootloader.`);
-    const r = await Promise.race([
-      reader.read(),
-      new Promise(resolve=>setTimeout(()=>resolve({timeout:true}), Math.min(left,80)))
-    ]);
-    if(r && r.timeout) continue;
-    if(r.done) throw new Error("El puerto serie se cerró.");
-    if(r.value) for(const b of r.value) out.push(b);
+  const deadline = Date.now() + timeout;
+
+  while(out.length < count){
+    while(rxBuffer.length && out.length < count){
+      out.push(rxBuffer.shift());
+    }
+
+    if(out.length >= count) break;
+
+    const left = deadline - Date.now();
+    if(left <= 0){
+      throw new Error(`Timeout esperando ${count} bytes del bootloader.`);
+    }
+
+    const chunk = await new Promise((resolve, reject)=>{
+      const waiter = {
+        count: count - out.length,
+        resolve,
+        reject
+      };
+      rxWaiters.push(waiter);
+
+      setTimeout(()=>{
+        const idx = rxWaiters.indexOf(waiter);
+        if(idx !== -1){
+          rxWaiters.splice(idx,1);
+          reject(new Error(`Timeout esperando ${count} bytes del bootloader.`));
+        }
+      }, left);
+    });
+
+    for(const b of chunk) out.push(b);
   }
-  return new Uint8Array(out.slice(0,count));
+
+  return new Uint8Array(out);
 }
 
 async function command(cmd, payload=[], responseDataLen=0, timeout=1000){
@@ -387,18 +454,29 @@ async function command(cmd, payload=[], responseDataLen=0, timeout=1000){
 }
 
 async function syncBootloader(){
-  for(let attempt=1; attempt<=8; attempt++){
+  for(let attempt=1; attempt<=10; attempt++){
+    clearRxBuffer();
+
     try{
       await writeBytes([GET_SYNC, CRC_EOP]);
-      const r = await readExact(2, 350);
+      const r = await readExact(2, 500);
+
       if(r[0]===STK_INSYNC && r[1]===STK_OK){
-        log(`Bootloader sincronizado (intento ${attempt}).`);
+        log(`Bootloader sincronizado a ${BAUD} baud (intento ${attempt}).`);
         return;
       }
-    }catch(e){}
-    await sleep(120);
+
+      log(`Sincronización intento ${attempt}: respuesta ${Array.from(r).map(b=>"0x"+b.toString(16).padStart(2,"0")).join(" ")}.`);
+    }catch(e){
+      log(`Sincronización intento ${attempt}: sin respuesta.`);
+    }
+
+    await sleep(100);
   }
-  throw new Error("No se pudo sincronizar con el bootloader a 57600 baud. Verifica la conexión USB y que ninguna otra aplicación esté utilizando el puerto.");
+
+  throw new Error(
+    `No se pudo sincronizar con el bootloader Arduino Uno/ATmega328 a ${BAUD} baud.`
+  );
 }
 
 async function loadAddress(byteAddress){
@@ -467,9 +545,14 @@ async function flashImage(){
 }
 
 async function closePort(){
+  rxPumpRunning = false;
+  rxWaiters.splice(0).forEach(w => {
+    try{ w.reject(new Error("Puerto cerrado.")); }catch(e){}
+  });
   try{ if(reader){ await reader.cancel(); reader.releaseLock(); reader=null; } }catch(e){}
   try{ if(writer){ writer.releaseLock(); writer=null; } }catch(e){}
   try{ if(port){ await port.close(); port=null; } }catch(e){}
+  rxBuffer = [];
 }
 
 $("connectBtn").addEventListener("click", async()=>{
