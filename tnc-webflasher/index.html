@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Web Flasher Indy Open APRS para Nano TNC ATmega328P / CH340.">
-  <title>Indy Open APRS — TNC Web Flasher</title>
+  <meta name="description" content="Actualizador web de firmware para Indy Open TNC.">
+  <title>Indy Open TNC — Web Flasher</title>
   <style>
     :root{
       --bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#657a7f;--accent:#0e7c86;
@@ -27,12 +27,11 @@
     .status.ok{background:var(--ok);border-left-color:var(--ok-line)}
     .status.error{background:var(--error);border-left-color:var(--error-line)}
     .warning{background:var(--warning);border-left:4px solid var(--warning-line);padding:14px 16px;border-radius:10px;margin-top:18px}
-    button,.file-label{appearance:none;border:0;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;
+    button{appearance:none;border:0;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;
       font-weight:700;font-size:1rem;cursor:pointer;display:inline-block;text-align:center}
-    button:hover,.file-label:hover{background:var(--accent-dark)}
+    button:hover{background:var(--accent-dark)}
     button.secondary{background:#e5f2f3;color:var(--accent-dark)}
     button:disabled{opacity:.45;cursor:not-allowed}
-    input[type=file]{display:none}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
     .progress{width:100%;height:16px;border-radius:999px;background:#e8eff0;overflow:hidden;margin:12px 0}
     .progress>div{height:100%;width:0;background:var(--accent);transition:width .15s}
@@ -49,13 +48,13 @@
   <section class="hero">
     <div class="eyebrow">Indy Open Project by XE3JAC</div>
     <h1>TNC WEB FLASHER</h1>
-    <p>Programador web para la Nano TNC basada en ATmega328P con interfaz USB CH340. Usa Web Serial y el bootloader serie del Arduino Nano.</p>
+    <p>Actualiza el firmware de Indy Open TNC directamente desde el navegador.</p>
   </section>
 
   <div class="grid">
-    <section class="card">
+<section class="card">
       <span class="version">Indy Open TNC · buscando última versión…</span>
-      <h2 style="margin-top:14px">Instalar firmware TNC</h2>
+      <h2 style="margin-top:14px">Actualizar Indy Open TNC</h2>
 
       <div id="supportStatus" class="status"></div>
 
@@ -67,7 +66,7 @@
       <div class="status">
         <strong>Firmware:</strong> <span id="fileName">buscando en GitHub Releases…</span><br>
         <strong>Puerto:</strong> <span id="portName">no conectado</span><br>
-        <strong>Programación:</strong> 57600 baud (bootloader Nano antiguo)<br>
+        <strong>Programación:</strong> 115200 baud (bootloader)<br>
         <strong>Operación TNC:</strong> 19200 baud
       </div>
 
@@ -77,44 +76,22 @@
       <h3>Registro</h3>
       <pre id="log">Indy Open APRS — TNC Web Flasher
 Listo.</pre>
-
-      <div class="warning">
-        <strong>Importante:</strong> durante la programación desconecta, si es posible, la Nano TNC del resto del circuito Indy y deja únicamente el USB conectado. No retires el cable hasta que la verificación termine.
-      </div>
     </section>
 
     <aside class="card">
-      <h2>Firmware disponible</h2>
-      <p>La página busca automáticamente en los <strong>GitHub Releases</strong> el release publicado más reciente que contenga un archivo con este formato:</p>
-      <p><code>indy-open-tnc-vVERSION.hex</code></p>
-      <p>Ejemplo: <code>indy-open-tnc-v0.15.6.hex</code></p>
-      <h2>Datos confirmados</h2>
-      <p>Según el procedimiento histórico de esta TNC:</p>
-      <ul>
-        <li>Arduino Nano con <strong>ATmega328P</strong>.</li>
-        <li>Convertidor USB-serie <strong>CH340</strong>.</li>
-        <li>XLoader configurado como <strong>Duemilanove/Nano (ATmega328)</strong>.</li>
-        <li>Velocidad de carga: <strong>57600 baud</strong>.</li>
-        <li>Velocidad normal de la TNC: <strong>19200 baud</strong>.</li>
-        <li>Firmware probado históricamente: <strong>TNC v0.15.4</strong>.</li>
-      </ul>
-
-      <h2 style="margin-top:24px">Procedimiento</h2>
+      <h2>Actualización</h2>
       <ol>
-        <li>Conecta la Nano por USB.</li>
-        <li>Pulsa <strong>Conectar Nano TNC</strong> y selecciona su puerto COM.</li>
+        <li>Conecta la Nano TNC a la computadora mediante USB.</li>
+        <li>Pulsa <strong>Conectar Nano TNC</strong> y selecciona el puerto correspondiente.</li>
+        <li>El Web Flasher detectará automáticamente la versión más reciente publicada.</li>
         <li>Pulsa <strong>Instalar Indy Open TNC</strong>.</li>
-        <li>El flasher reiniciará la Nano, sincronizará el bootloader y escribirá la memoria.</li>
-        <li>Al terminar, leerá de nuevo la memoria y verificará el contenido.</li>
+        <li>No desconectes el USB durante la programación y verificación.</li>
       </ol>
-
-      <div class="warning">
-        Compatible con Chrome/Edge de escritorio y una página servida por <strong>HTTPS</strong> (GitHub Pages funciona).
-      </div>
+      <div class="status"><strong>Programación:</strong> ATmega328P · 115200 baud</div>
     </aside>
   </div>
 
-  <footer>Indy Open APRS · Indy Open Project by XE3JAC</footer>
+  <footer>Indy Open TNC · Indy Open Project by XE3JAC</footer>
 </main>
 
 <script>
@@ -130,7 +107,7 @@ const LOAD_ADDRESS   = 0x55;
 const PROG_PAGE      = 0x64;
 const READ_PAGE      = 0x74;
 
-const BAUD = 57600;
+const BAUD = 115200;
 const PAGE_SIZE = 128;
 const FLASH_LIMIT = 32768;
 
@@ -174,7 +151,7 @@ async function detectLatestTncFirmware(){
 
       const badge = document.querySelector(".version");
       if(badge){
-        badge.textContent = `Indy Open TNC v${detectedVersion} · ATmega328P · 57600 baud`;
+        badge.textContent = `Indy Open TNC v${detectedVersion} · ATmega328P · 115200 baud`;
       }
 
       $("fileName").textContent = `${selectedName} (${(asset.size/1024).toFixed(1)} KB)`;
@@ -276,7 +253,7 @@ async function openPort(){
   await port.open({baudRate:BAUD, bufferSize:4096});
   writer = port.writable.getWriter();
   reader = port.readable.getReader();
-  $("portName").textContent = "conectado a 57600 baud";
+  $("portName").textContent = "conectado a 115200 baud";
   log("Puerto serie abierto.");
 }
 
@@ -352,7 +329,7 @@ async function syncBootloader(){
     }catch(e){}
     await sleep(120);
   }
-  throw new Error("No se pudo sincronizar con el bootloader a 57600 baud. Verifica que sea Nano ATmega328P con bootloader antiguo y que ninguna otra aplicación use el COM.");
+  throw new Error("No se pudo sincronizar con el bootloader a 115200 baud. Verifica la conexión USB y que ninguna otra aplicación esté utilizando el puerto.");
 }
 
 async function loadAddress(byteAddress){
