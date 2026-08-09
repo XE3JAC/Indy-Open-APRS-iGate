@@ -66,7 +66,7 @@
       <div class="status">
         <strong>Firmware:</strong> <span id="fileName">buscando en GitHub Releases…</span><br>
         <strong>Puerto:</strong> <span id="portName">no conectado</span><br>
-        <strong>Programación:</strong> 115200 baud (bootloader)<br></div>
+        <strong>Programación:</strong> 57600 baud (bootloader)<br></div>
 
       <div class="progress"><div id="progressBar"></div></div>
       <div id="resultStatus" class="status">Esperando conexión.</div>
@@ -85,7 +85,7 @@ Listo.</pre>
         <li>Pulsa <strong>Instalar Indy Open TNC</strong>.</li>
         <li>No desconectes el USB durante la programación y verificación.</li>
       </ol>
-      <div class="status"><strong>Programación:</strong> ATmega328P · 115200 baud</div>
+      <div class="status"><strong>Programación:</strong> ATmega328P · 57600 baud</div>
       <div class="status"><strong>Firmware:</strong> se obtiene automáticamente de la versión publicada más reciente.</div>
     </aside>
   </div>
@@ -151,7 +151,7 @@ async function detectLatestTncFirmware(){
 
       const badge = document.querySelector(".version");
       if(badge){
-        badge.textContent = `Indy Open TNC v${detectedVersion} · ATmega328P · 115200 baud`;
+        badge.textContent = `Indy Open TNC v${detectedVersion} · ATmega328P · 57600 baud`;
       }
 
       $("fileName").textContent = `${selectedName} (${(asset.size/1024).toFixed(1)} KB)`;
@@ -322,7 +322,7 @@ async function openPort(){
   await port.open({baudRate:BAUD, bufferSize:4096});
   writer = port.writable.getWriter();
   reader = port.readable.getReader();
-  $("portName").textContent = "conectado a 115200 baud";
+  $("portName").textContent = "conectado a 57600 baud";
   log("Puerto serie abierto.");
 }
 
@@ -398,7 +398,7 @@ async function syncBootloader(){
     }catch(e){}
     await sleep(120);
   }
-  throw new Error("No se pudo sincronizar con el bootloader a 115200 baud. Verifica la conexión USB y que ninguna otra aplicación esté utilizando el puerto.");
+  throw new Error("No se pudo sincronizar con el bootloader a 57600 baud. Verifica la conexión USB y que ninguna otra aplicación esté utilizando el puerto.");
 }
 
 async function loadAddress(byteAddress){
