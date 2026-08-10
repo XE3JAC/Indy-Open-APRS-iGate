@@ -1,4 +1,4 @@
-name: Update Web Flasher from Release
+name: Update Web Flashers from Release
 
 on:
   release:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  update-webflasher:
+  update-webflashers:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,40 +18,96 @@ jobs:
         with:
           ref: main
 
-      - name: Download firmware from latest release
+      - name: Determine release tag
+        id: release
         env:
           GH_TOKEN: ${{ github.token }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
         run: |
-          mkdir -p webflasher/firmware
-          rm -f /tmp/indy-open-*.bin
-          gh release download "${{ github.event.release.tag_name }}" \
-            --pattern 'indy-open-*.bin' \
-            --dir /tmp
-          BIN="$(find /tmp -maxdepth 1 -type f -name 'indy-open-*.bin' | head -n 1)"
-          if [ -z "$BIN" ]; then
-            echo "No se encontró un asset indy-open-*.bin en el release."
+          if [ -n "$EVENT_TAG" ]; then
+            TAG="$EVENT_TAG"
+          else
+            TAG="$(gh release view --json tagName --jq .tagName)"
+          fi
+
+          if [ -z "$TAG" ]; then
+            echo "No se pudo determinar el Release."
             exit 1
           fi
-          cp "$BIN" webflasher/firmware/indy-open-latest.bin
 
-      - name: Update manifest version
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release seleccionado: $TAG"
+
+      - name: Download release assets
         env:
-          VERSION: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
         run: |
-          python - <<'PY'
+          rm -rf /tmp/indy-release
+          mkdir -p /tmp/indy-release
+
+          gh release download "$TAG" \
+            --pattern 'indy-open-*.bin' \
+            --pattern 'indy-open-tnc-v*.hex' \
+            --dir /tmp/indy-release || true
+
+          echo "Assets encontrados:"
+          find /tmp/indy-release -maxdepth 1 -type f -printf '%f\n' || true
+
+      - name: Update ESP8266 Web Flasher
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          BIN="$(find /tmp/indy-release -maxdepth 1 -type f -name 'indy-open-*.bin' | head -n 1)"
+
+          if [ -n "$BIN" ]; then
+            mkdir -p webflasher/firmware
+            cp "$BIN" webflasher/firmware/indy-open-latest.bin
+            echo "ESP8266 actualizado con: $(basename "$BIN")"
+
+            python - <<'PY'
           import json, os
           from pathlib import Path
-          p = Path("webflasher/manifest.json")
-          data = json.loads(p.read_text())
-          data["version"] = os.environ["VERSION"].lstrip("v")
-          p.write_text(json.dumps(data, indent=2) + "\n")
-          PY
 
-      - name: Commit updated web flasher
+          p = Path("webflasher/manifest.json")
+          if not p.exists():
+              raise SystemExit("No existe webflasher/manifest.json")
+
+          data = json.loads(p.read_text(encoding="utf-8"))
+          data["version"] = os.environ["TAG"].lstrip("v")
+          p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+          PY
+          else
+            echo "Este Release no contiene firmware ESP8266. No se modifica el Web Flasher ESP8266."
+          fi
+
+      - name: Update TNC Web Flasher
+        run: |
+          HEX="$(find /tmp/indy-release -maxdepth 1 -type f -name 'indy-open-tnc-v*.hex' | head -n 1)"
+
+          if [ -n "$HEX" ]; then
+            mkdir -p tnc-webflasher/firmware
+            cp "$HEX" tnc-webflasher/firmware/indy-open-tnc-latest.hex
+            echo "TNC actualizada con: $(basename "$HEX")"
+          else
+            echo "Este Release no contiene firmware TNC. No se modifica el Web Flasher TNC."
+          fi
+
+      - name: Commit updated Web Flashers
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add webflasher/firmware/indy-open-latest.bin webflasher/manifest.json
-          git diff --cached --quiet && exit 0
-          git commit -m "Update Web Flasher to ${{ github.event.release.tag_name }}"
+
+          git add webflasher/firmware/indy-open-latest.bin 2>/dev/null || true
+          git add webflasher/manifest.json 2>/dev/null || true
+          git add tnc-webflasher/firmware/indy-open-tnc-latest.hex 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "No hay cambios que publicar."
+            exit 0
+          fi
+
+          git commit -m "Update Web Flashers to $TAG"
           git push
