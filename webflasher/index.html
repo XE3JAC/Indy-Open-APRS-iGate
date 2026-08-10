@@ -46,7 +46,7 @@
 
   <div class="grid">
     <section class="card">
-      <span class="version" id="versionBadge">Firmware v1.5.37</span>
+      <span class="version" id="versionBadge">Firmware...</span>
       <h2>Instalar firmware</h2>
       <div class="status"><strong>Listo.</strong> El instalador utilizará <code>firmware/indy-open-latest.bin</code>.</div>
 
@@ -76,10 +76,8 @@
     <aside class="card">
       <h2>Firmware actual</h2>
       <div class="meta">
-        <strong>Versión:</strong> v1.5.37<br>
-        <strong>Archivo instalado:</strong> indy-open-latest.bin<br>
-        <strong>Tamaño:</strong> 457,728 bytes<br>
-        <strong>SHA-256:</strong><br>f8f150deeb6b0f93a264aa74bf5fa4daeb77ee0058e59c0b7e0fa83e330794b2
+        <strong>Versión:</strong> <span id="firmwareVersion">Consultando...</span><br>
+        <strong>Archivo instalado:</strong> <span id="firmwareFile">indy-open-latest.bin</span>
       </div>
 
       <h2 style="margin-top:24px">Primera conexión</h2>
@@ -97,5 +95,32 @@
   </div>
   <footer>Indy Open APRS · Indy Open Project by XE3JAC</footer>
 </main>
+
+<script>
+async function cargarVersionFirmware() {
+  const badge = document.getElementById('versionBadge');
+  const versionEl = document.getElementById('firmwareVersion');
+  const fileEl = document.getElementById('firmwareFile');
+
+  try {
+    const response = await fetch('manifest.json?nocache=' + Date.now(), { cache: 'no-store' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+
+    const manifest = await response.json();
+    const version = manifest.version || 'Desconocida';
+    const file = manifest?.builds?.[0]?.parts?.[0]?.path?.split('/').pop() || 'indy-open-latest.bin';
+
+    badge.textContent = 'Firmware v' + version;
+    versionEl.textContent = 'v' + version;
+    fileEl.textContent = file;
+  } catch (error) {
+    console.error('No se pudo leer manifest.json:', error);
+    badge.textContent = 'Firmware disponible';
+    versionEl.textContent = 'No disponible';
+  }
+}
+
+cargarVersionFirmware();
+</script>
 </body>
 </html>
