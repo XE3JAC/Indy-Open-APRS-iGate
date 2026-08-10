@@ -1,4 +1,4 @@
-# Indy Open APRS - Documentacion Ver. 1.5.37
+# Indy Open APRS - Documentación Ver. 1.5.37
 
 **Firmware APRS abierto para ESP8266 basado en la plataforma de hardware TA1KNN**
 
