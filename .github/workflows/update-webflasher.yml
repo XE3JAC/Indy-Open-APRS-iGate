@@ -146,6 +146,10 @@ jobs:
               ;;
           esac
 
+      - name: Remove obsolete firmware name
+        run: |
+          rm -f webflasher/firmware/indy-open-latest.bin
+
       - name: Commit updated Web Flasher
         env:
           TAG: ${{ steps.release.outputs.tag }}
