@@ -229,7 +229,7 @@ async function loadEsptool(){
   setResult("Preparando conexión USB…");
   log("Cargando componente de programación…");
 
-  esptoolModule = await import("https://unpkg.com/esptool-js@0.6.0/lib/index.js");
+  esptoolModule = await import("https://cdn.jsdelivr.net/npm/esptool-js@0.6.0/+esm");
 
   log("Componente de programación listo.");
   return esptoolModule;
