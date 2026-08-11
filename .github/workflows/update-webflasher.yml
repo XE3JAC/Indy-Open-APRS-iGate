@@ -4,6 +4,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag del Release a procesar (ej. igate-v1.5.92 o tracker-v1.5.93)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -21,87 +26,143 @@ jobs:
       - name: Determine release tag
         id: release
         env:
-          GH_TOKEN: ${{ github.token }}
           EVENT_TAG: ${{ github.event.release.tag_name }}
+          MANUAL_TAG: ${{ inputs.tag }}
         run: |
           if [ -n "$EVENT_TAG" ]; then
             TAG="$EVENT_TAG"
           else
-            TAG="$(gh release view --json tagName --jq .tagName)"
+            TAG="$MANUAL_TAG"
           fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Release: $TAG"
 
-      - name: Download release assets
+          if [ -z "$TAG" ]; then
+            echo "No se pudo determinar el tag del Release."
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release a procesar: $TAG"
+
+      - name: Process release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
+          set -e
+
+          mkdir -p webflasher/firmware
+          mkdir -p tnc-webflasher/firmware
           rm -rf /tmp/indy-release
           mkdir -p /tmp/indy-release
-          gh release download "$TAG" \
-            --pattern 'indy-open-igate-v*.bin' \
-            --pattern 'indy-open-tracker-v*.bin' \
-            --pattern 'indy-open-tnc-v*.hex' \
-            --dir /tmp/indy-release || true
-          find /tmp/indy-release -maxdepth 1 -type f -printf '%f\n' || true
 
-      - name: Update iGate Web Flasher
-        run: |
-          BIN="$(find /tmp/indy-release -maxdepth 1 -type f -name 'indy-open-igate-v*.bin' | head -n 1)"
-          if [ -n "$BIN" ]; then
-            mkdir -p webflasher/firmware
-            cp "$BIN" webflasher/firmware/indy-open-igate-latest.bin
-            VERSION="$(basename "$BIN" | sed -E 's/^indy-open-igate-v(.+)\.bin$/\1/')"
-            VERSION="$VERSION" python - <<'PY'
+          echo "Procesando $TAG"
+
+          case "$TAG" in
+
+            igate-v*)
+              VERSION="${TAG#igate-v}"
+              ASSET="indy-open-igate-v${VERSION}.bin"
+
+              echo "Tipo detectado: Indy Open iGate"
+              echo "Versión: $VERSION"
+              echo "Asset esperado: $ASSET"
+
+              gh release download "$TAG" \
+                --pattern "$ASSET" \
+                --dir /tmp/indy-release
+
+              if [ ! -f "/tmp/indy-release/$ASSET" ]; then
+                echo "ERROR: no se encontró $ASSET"
+                exit 1
+              fi
+
+              cp "/tmp/indy-release/$ASSET" \
+                webflasher/firmware/indy-open-igate-latest.bin
+
+              VERSION="$VERSION" python - <<'PY'
           import json, os
           from pathlib import Path
-          p=Path('webflasher/manifest-igate.json')
-          d=json.loads(p.read_text())
-          d['version']=os.environ['VERSION']
-          p.write_text(json.dumps(d,indent=2)+'\n')
-          PY
-          else
-            echo "Sin firmware iGate en este Release."
-          fi
 
-      - name: Update Tracker Web Flasher
-        run: |
-          BIN="$(find /tmp/indy-release -maxdepth 1 -type f -name 'indy-open-tracker-v*.bin' | head -n 1)"
-          if [ -n "$BIN" ]; then
-            mkdir -p webflasher/firmware
-            cp "$BIN" webflasher/firmware/indy-open-tracker-latest.bin
-            VERSION="$(basename "$BIN" | sed -E 's/^indy-open-tracker-v(.+)\.bin$/\1/')"
-            VERSION="$VERSION" python - <<'PY'
+          p = Path("webflasher/manifest-igate.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+          data["version"] = os.environ["VERSION"]
+          data["builds"][0]["parts"][0]["path"] = "firmware/indy-open-igate-latest.bin"
+          p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+          PY
+
+              echo "iGate actualizado a v$VERSION"
+              ;;
+
+            tracker-v*)
+              VERSION="${TAG#tracker-v}"
+              ASSET="indy-open-tracker-v${VERSION}.bin"
+
+              echo "Tipo detectado: Indy Open Tracker"
+              echo "Versión: $VERSION"
+              echo "Asset esperado: $ASSET"
+
+              gh release download "$TAG" \
+                --pattern "$ASSET" \
+                --dir /tmp/indy-release
+
+              if [ ! -f "/tmp/indy-release/$ASSET" ]; then
+                echo "ERROR: no se encontró $ASSET"
+                exit 1
+              fi
+
+              cp "/tmp/indy-release/$ASSET" \
+                webflasher/firmware/indy-open-tracker-latest.bin
+
+              VERSION="$VERSION" python - <<'PY'
           import json, os
           from pathlib import Path
-          p=Path('webflasher/manifest-tracker.json')
-          d=json.loads(p.read_text())
-          d['version']=os.environ['VERSION']
-          p.write_text(json.dumps(d,indent=2)+'\n')
+
+          p = Path("webflasher/manifest-tracker.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+          data["version"] = os.environ["VERSION"]
+          data["builds"][0]["parts"][0]["path"] = "firmware/indy-open-tracker-latest.bin"
+          p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
           PY
-          else
-            echo "Sin firmware Tracker en este Release."
-          fi
 
-      - name: Update TNC fallback if present
-        run: |
-          HEX="$(find /tmp/indy-release -maxdepth 1 -type f -name 'indy-open-tnc-v*.hex' | head -n 1)"
-          if [ -n "$HEX" ]; then
-            mkdir -p tnc-webflasher/firmware
-            cp "$HEX" tnc-webflasher/firmware/indy-open-tnc-latest.hex
-          fi
+              echo "Tracker actualizado a v$VERSION"
+              ;;
 
-      - name: Commit updated Web Flashers
+            *)
+              echo "El tag $TAG no corresponde a iGate ni Tracker."
+              echo "Se comprobará únicamente si contiene firmware TNC."
+
+              gh release download "$TAG" \
+                --pattern 'indy-open-tnc-v*.hex' \
+                --dir /tmp/indy-release || true
+
+              HEX="$(find /tmp/indy-release -maxdepth 1 -type f -name 'indy-open-tnc-v*.hex' | head -n 1)"
+
+              if [ -n "$HEX" ]; then
+                cp "$HEX" tnc-webflasher/firmware/indy-open-tnc-latest.hex
+                echo "TNC actualizada con $(basename "$HEX")"
+              else
+                echo "No hay firmware compatible para actualizar el Web Flasher."
+              fi
+              ;;
+          esac
+
+      - name: Commit updated Web Flasher
         env:
           TAG: ${{ steps.release.outputs.tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add webflasher/manifest-igate.json webflasher/manifest-tracker.json 2>/dev/null || true
+
+          git add webflasher/manifest-igate.json 2>/dev/null || true
+          git add webflasher/manifest-tracker.json 2>/dev/null || true
           git add webflasher/firmware/indy-open-igate-latest.bin 2>/dev/null || true
           git add webflasher/firmware/indy-open-tracker-latest.bin 2>/dev/null || true
           git add tnc-webflasher/firmware/indy-open-tnc-latest.hex 2>/dev/null || true
-          git diff --cached --quiet && exit 0
-          git commit -m "Update Web Flashers from $TAG"
+
+          if git diff --cached --quiet; then
+            echo "No hay cambios que publicar."
+            exit 0
+          fi
+
+          git commit -m "Update Web Flasher from $TAG"
           git push
