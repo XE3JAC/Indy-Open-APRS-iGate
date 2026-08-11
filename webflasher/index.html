@@ -376,8 +376,21 @@ $("connectBtn").addEventListener("click", async () => {
     await connectBoard();
   }catch(e){
     $("deviceState").textContent = "sin conectar";
-    setResult(e.message || String(e), "error");
-    log(`ERROR: ${e.message || e}`);
+
+    const msg = String(e?.message || e || "");
+
+    if (
+      e?.name === "NotFoundError" ||
+      msg.includes("No port selected by the user") ||
+      msg.includes("No port selected")
+    ){
+      setResult("Conexión cancelada por el usuario.");
+      log("Conexión cancelada por el usuario.");
+    } else {
+      setResult(msg || "No fue posible conectar con el ESP8266.", "error");
+      log(`ERROR: ${msg || e}`);
+    }
+
     $("flashBtn").disabled = true;
   }
 });
