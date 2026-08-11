@@ -395,11 +395,14 @@ Indy Open Project by **XE3JAC**
 
 Documentación basada en la interfaz y hardware de referencia del proyecto.
 
-## ❤️ Apoya Indy Open APRS
 
-Indy Open APRS es un proyecto abierto para la comunidad de radioaficionados.
+## ☕ Apoya el proyecto
 
-Si este proyecto te resulta útil y deseas colaborar con su desarrollo, pruebas, documentación y mantenimiento, puedes apoyar el proyecto mediante PayPal.
+Indy Open es un proyecto comunitario desarrollado por interés en la radioafición, la experimentación y el hardware/software abierto.
+
+Si quieres ayudar a continuar desarrollando placas, probando hardware y creando nuevas funciones, podrás apoyar voluntariamente el proyecto.
+
+❤️ **Las donaciones son completamente opcionales.**
 
 [![Donar con PayPal](https://www.paypalobjects.com/es_XC/MX/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate?hosted_button_id=2RX7AT3HP4RNG)
 
