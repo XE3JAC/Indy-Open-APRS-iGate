@@ -1,6 +1,6 @@
 {
   "name": "Indy Open APRS",
-  "version": "1.5.73",
+  "version": "1.5.83",
   "new_install_prompt_erase": true,
   "builds": [
     {
