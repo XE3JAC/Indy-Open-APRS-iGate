@@ -45,7 +45,6 @@ footer{color:var(--muted);text-align:center;font-size:.9rem;margin-top:28px}
 </head>
 <body>
 <main class="wrap">
-
 <section class="hero">
   <div class="eyebrow">Indy Open Project by XE3JAC</div>
   <h1>INDY OPEN APRS</h1>
@@ -70,7 +69,7 @@ footer{color:var(--muted);text-align:center;font-size:.9rem;margin-top:28px}
     </label>
   </div>
 
-  <div id="supportStatus" class="status"></div>
+  <div id="supportStatus" class="status">Comprobando compatibilidad…</div>
 
   <div class="actions">
     <button id="connectBtn">1. Conectar ESP8266</button>
@@ -112,9 +111,7 @@ Listo.</pre>
 <footer>Indy Open APRS · Indy Open Project by XE3JAC</footer>
 </main>
 
-<script type="module">
-import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.6.0/lib/index.js";
-
+<script>
 const BAUD = 115200;
 
 const FIRMWARES = {
@@ -133,6 +130,7 @@ let manifests = {};
 let port = null;
 let transport = null;
 let loader = null;
+let esptoolModule = null;
 
 const $ = id => document.getElementById(id);
 
@@ -174,20 +172,21 @@ function renderSelection(){
 
 async function loadManifest(key){
   const cfg = FIRMWARES[key];
+  const url = `${cfg.manifest}?nocache=${Date.now()}`;
 
-  const response = await fetch(`${cfg.manifest}?nocache=${Date.now()}`, {
-    cache: "no-store"
-  });
+  log(`Consultando ${cfg.label}…`);
+
+  const response = await fetch(url, {cache:"no-store"});
 
   if(!response.ok){
-    throw new Error(`No se pudo consultar ${cfg.label}.`);
+    throw new Error(`${cfg.label}: HTTP ${response.status}`);
   }
 
   const manifest = await response.json();
   const part = getPart(manifest);
 
-  if(!part || part.offset !== 0){
-    throw new Error(`${cfg.label} no tiene una imagen válida para ESP8266.`);
+  if(!part){
+    throw new Error(`${cfg.label}: manifiesto inválido`);
   }
 
   manifests[key] = manifest;
@@ -197,20 +196,19 @@ async function loadManifest(key){
 
 async function loadCatalog(){
   setResult("Consultando versiones disponibles…");
-  log("Consultando firmwares disponibles…");
 
   const results = await Promise.allSettled([
     loadManifest("igate"),
     loadManifest("tracker")
   ]);
 
-  results.forEach((result, index) => {
-    if(result.status === "rejected"){
-      const key = index === 0 ? "igate" : "tracker";
+  for(let i=0;i<results.length;i++){
+    if(results[i].status === "rejected"){
+      const key = i === 0 ? "igate" : "tracker";
       $(key === "igate" ? "verIgate" : "verTracker").textContent = "no disponible";
-      log(`No se pudo cargar ${FIRMWARES[key].label}.`);
+      log(`ERROR: ${results[i].reason?.message || results[i].reason}`);
     }
-  });
+  }
 
   if(!manifests.igate && !manifests.tracker){
     throw new Error("No se pudo cargar ningún firmware.");
@@ -225,10 +223,24 @@ async function loadCatalog(){
   setResult("Firmwares disponibles. Conecta tu ESP8266.", "ok");
 }
 
+async function loadEsptool(){
+  if(esptoolModule) return esptoolModule;
+
+  setResult("Preparando conexión USB…");
+  log("Cargando componente de programación…");
+
+  esptoolModule = await import("https://unpkg.com/esptool-js@0.6.0/lib/index.js");
+
+  log("Componente de programación listo.");
+  return esptoolModule;
+}
+
 async function connectBoard(){
   if(!("serial" in navigator)){
     throw new Error("Tu navegador no permite la conexión USB requerida.");
   }
+
+  const {ESPLoader, Transport} = await loadEsptool();
 
   if(transport){
     try{ await transport.disconnect(); }catch{}
@@ -262,7 +274,6 @@ async function connectBoard(){
 
   $("deviceState").textContent = "ESP8266 conectado";
   log("ESP8266 detectado correctamente.");
-
   renderSelection();
   setResult("ESP8266 conectado. Listo para instalar.", "ok");
 }
@@ -276,17 +287,17 @@ async function downloadFirmware(){
     throw new Error("No hay firmware disponible para esta opción.");
   }
 
-  const url = new URL(part.path, new URL(cfg.manifest, location.href));
+  const firmwareUrl = new URL(part.path, location.href);
 
   setResult(`Preparando ${cfg.label} v${manifest.version}…`);
   log(`Preparando ${cfg.label} v${manifest.version}…`);
 
-  const response = await fetch(`${url.href}?v=${encodeURIComponent(manifest.version)}`, {
-    cache: "no-store"
+  const response = await fetch(`${firmwareUrl.href}?v=${encodeURIComponent(manifest.version)}`, {
+    cache:"no-store"
   });
 
   if(!response.ok){
-    throw new Error("No fue posible obtener el firmware seleccionado.");
+    throw new Error(`No fue posible obtener el firmware seleccionado (HTTP ${response.status}).`);
   }
 
   const data = new Uint8Array(await response.arrayBuffer());
@@ -295,7 +306,7 @@ async function downloadFirmware(){
     throw new Error("El firmware descargado no parece válido.");
   }
 
-  log("Firmware preparado correctamente.");
+  log(`Firmware preparado correctamente (${(data.length/1024).toFixed(1)} KB).`);
   return {manifest, part, data};
 }
 
