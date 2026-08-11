@@ -6,54 +6,401 @@
 <meta name="description" content="Web Flasher oficial de Indy Open APRS para ESP8266 / NodeMCU.">
 <title>Indy Open APRS — Web Flasher</title>
 <style>
-:root{--bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#657a7f;--accent:#0e7c86;--accent-dark:#095a61;--line:#d9e5e7;--warning:#fff4d8;--warning-line:#d7a52b;--ok:#e8f5ec;--ok-line:#4d9b62;--error:#fdeaea;--error-line:#c85c5c}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(180deg,#e9f4f5 0,var(--bg) 280px);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}.wrap{width:min(1000px,calc(100% - 32px));margin:0 auto;padding:36px 0 64px}.hero{background:linear-gradient(135deg,var(--accent-dark),#1598a3);color:#fff;border-radius:22px;padding:34px}.eyebrow{font-size:.9rem;opacity:.84;margin-bottom:5px}h1{margin:0;font-size:clamp(2rem,7vw,4.2rem);line-height:1;letter-spacing:-.04em}.hero p{max-width:760px;font-size:1.05rem;margin-bottom:0}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:20px}.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}h2{margin-top:0;color:var(--accent-dark)}h3{color:var(--accent-dark);margin-bottom:8px}.status{margin:14px 0;padding:12px 14px;border-radius:10px;background:#f8fbfb;border-left:4px solid var(--line)}.status.ok{background:var(--ok);border-left-color:var(--ok-line)}.status.error{background:var(--error);border-left-color:var(--error-line)}.warning{background:var(--warning);border-left:4px solid var(--warning-line);padding:14px 16px;border-radius:10px;margin-top:18px}.selector{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.option{border:2px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;background:#fff}.option.selected{border-color:var(--accent);background:#f3fbfb}.option strong{color:var(--accent-dark)}.small{font-size:.88rem;color:var(--muted)}button{appearance:none;border:0;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer}button:hover{background:var(--accent-dark)}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.progress{width:100%;height:16px;border-radius:999px;background:#e8eff0;overflow:hidden;margin:12px 0}.progress>div{height:100%;width:0;background:var(--accent);transition:width .12s}.meta{color:var(--muted);font-size:.9rem}code{background:#edf3f4;padding:2px 6px;border-radius:6px}pre{background:#102a2e;color:#d8f0f2;padding:14px;border-radius:12px;max-height:320px;overflow:auto;font-size:.82rem;white-space:pre-wrap}ol{padding-left:1.3rem}footer{color:var(--muted);text-align:center;font-size:.9rem;margin-top:28px}@media(max-width:760px){.grid{grid-template-columns:1fr}.selector{grid-template-columns:1fr}.hero{padding:26px 22px}}
+:root{
+  --bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#657a7f;--accent:#0e7c86;
+  --accent-dark:#095a61;--line:#d9e5e7;--warning:#fff4d8;--warning-line:#d7a52b;
+  --ok:#e8f5ec;--ok-line:#4d9b62;--error:#fdeaea;--error-line:#c85c5c
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#e9f4f5 0,var(--bg) 280px);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+.wrap{width:min(1000px,calc(100% - 32px));margin:0 auto;padding:36px 0 64px}
+.hero{background:linear-gradient(135deg,var(--accent-dark),#1598a3);color:#fff;border-radius:22px;padding:34px}
+.eyebrow{font-size:.9rem;opacity:.84;margin-bottom:5px}
+h1{margin:0;font-size:clamp(2rem,7vw,4.2rem);line-height:1;letter-spacing:-.04em}
+.hero p{max-width:760px;font-size:1.05rem;margin-bottom:0}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+h2{margin-top:0;color:var(--accent-dark)}
+h3{color:var(--accent-dark);margin-bottom:8px}
+.status{margin:14px 0;padding:12px 14px;border-radius:10px;background:#f8fbfb;border-left:4px solid var(--line)}
+.status.ok{background:var(--ok);border-left-color:var(--ok-line)}
+.status.error{background:var(--error);border-left-color:var(--error-line)}
+.warning{background:var(--warning);border-left:4px solid var(--warning-line);padding:14px 16px;border-radius:10px;margin-top:18px}
+.selector{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.option{border:2px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;background:#fff}
+.option.selected{border-color:var(--accent);background:#f3fbfb}
+.option strong{color:var(--accent-dark)}
+.small{font-size:.88rem;color:var(--muted)}
+button{appearance:none;border:0;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer}
+button:hover{background:var(--accent-dark)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.progress{width:100%;height:16px;border-radius:999px;background:#e8eff0;overflow:hidden;margin:12px 0}
+.progress>div{height:100%;width:0;background:var(--accent);transition:width .12s}
+pre{background:#102a2e;color:#d8f0f2;padding:14px;border-radius:12px;max-height:320px;overflow:auto;font-size:.82rem;white-space:pre-wrap}
+ol{padding-left:1.3rem}
+footer{color:var(--muted);text-align:center;font-size:.9rem;margin-top:28px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.selector{grid-template-columns:1fr}.hero{padding:26px 22px}}
 </style>
 </head>
 <body>
 <main class="wrap">
-<section class="hero"><div class="eyebrow">Indy Open Project by XE3JAC</div><h1>INDY OPEN APRS</h1><p>Web Flasher para ESP8266 / NodeMCU. Selecciona iGate o Tracker y sigue el proceso en la consola.</p></section>
+
+<section class="hero">
+  <div class="eyebrow">Indy Open Project by XE3JAC</div>
+  <h1>INDY OPEN APRS</h1>
+  <p>Selecciona iGate o Tracker, conecta tu ESP8266 y sigue el avance de la instalación.</p>
+</section>
+
 <div class="grid">
 <section class="card">
-<h2>Selecciona el firmware</h2>
-<div class="selector">
-<label class="option selected" id="optIgate"><input type="radio" name="firmware" value="igate" checked> <strong>Indy Open iGate</strong><div class="small">ESP8266 / NodeMCU</div><div class="small">Versión: <span id="verIgate">consultando…</span></div></label>
-<label class="option" id="optTracker"><input type="radio" name="firmware" value="tracker"> <strong>Indy Open Tracker</strong><div class="small">ESP8266 / NodeMCU</div><div class="small">Versión: <span id="verTracker">consultando…</span></div></label>
-</div>
-<div id="supportStatus" class="status"></div>
-<div class="actions"><button id="connectBtn">1. Conectar ESP8266</button><button id="flashBtn" disabled>2. Instalar firmware</button></div>
-<div class="status"><strong>Firmware:</strong> <span id="selectedFirmware">Indy Open iGate</span><br><strong>Versión:</strong> <span id="selectedVersion">consultando…</span><br><strong>Archivo:</strong> <span id="selectedFile">consultando…</span><br><strong>Placa:</strong> <span id="chipName">no conectada</span></div>
-<div class="progress"><div id="progressBar"></div></div>
-<div id="resultStatus" class="status">Preparando Web Flasher…</div>
-<h3>Consola</h3><pre id="log">Indy Open APRS — Web Flasher
+  <h2>Selecciona el firmware</h2>
+
+  <div class="selector">
+    <label class="option selected" id="optIgate">
+      <input type="radio" name="firmware" value="igate" checked>
+      <strong>Indy Open iGate</strong>
+      <div class="small">Versión: <span id="verIgate">consultando…</span></div>
+    </label>
+
+    <label class="option" id="optTracker">
+      <input type="radio" name="firmware" value="tracker">
+      <strong>Indy Open Tracker</strong>
+      <div class="small">Versión: <span id="verTracker">consultando…</span></div>
+    </label>
+  </div>
+
+  <div id="supportStatus" class="status"></div>
+
+  <div class="actions">
+    <button id="connectBtn">1. Conectar ESP8266</button>
+    <button id="flashBtn" disabled>2. Instalar firmware</button>
+  </div>
+
+  <div class="status">
+    <strong>Firmware:</strong> <span id="selectedFirmware">Indy Open iGate</span><br>
+    <strong>Versión:</strong> <span id="selectedVersion">consultando…</span><br>
+    <strong>Estado:</strong> <span id="deviceState">sin conectar</span>
+  </div>
+
+  <div class="progress"><div id="progressBar"></div></div>
+  <div id="resultStatus" class="status">Preparando Web Flasher…</div>
+
+  <h3>Consola</h3>
+  <pre id="log">Indy Open APRS — Web Flasher
 Listo.</pre>
-<div class="warning"><strong>Importante:</strong> este flasher es únicamente para ESP8266 / NodeMCU. No debe utilizarse para la Nano TNC / ATmega.</div>
+
+  <div class="warning"><strong>Importante:</strong> este instalador es únicamente para ESP8266 / NodeMCU.</div>
 </section>
-<aside class="card"><h2>Procedimiento</h2><ol><li>Selecciona <strong>Indy Open iGate</strong> o <strong>Indy Open Tracker</strong>.</li><li>Conecta el ESP8266 / NodeMCU por USB.</li><li>Pulsa <strong>Conectar ESP8266</strong>.</li><li>Selecciona el puerto COM.</li><li>Comprueba que se detecte un ESP8266.</li><li>Pulsa <strong>Instalar firmware</strong>.</li><li>No desconectes el USB hasta que la consola indique que terminó.</li></ol><div class="status"><strong>Programación:</strong> Web Serial + esptool-js.</div><div class="status"><strong>Dirección:</strong> 0x000000, igual que tu manifiesto actual.</div><div class="warning"><strong>Atención:</strong> antes de instalar se borra completamente la memoria flash.</div></aside>
+
+<aside class="card">
+  <h2>Procedimiento</h2>
+  <ol>
+    <li>Selecciona <strong>Indy Open iGate</strong> o <strong>Indy Open Tracker</strong>.</li>
+    <li>Conecta el ESP8266 / NodeMCU mediante USB.</li>
+    <li>Pulsa <strong>Conectar ESP8266</strong>.</li>
+    <li>Selecciona el puerto correspondiente.</li>
+    <li>Pulsa <strong>Instalar firmware</strong>.</li>
+    <li>No desconectes el equipo hasta que aparezca el mensaje de instalación completada.</li>
+  </ol>
+
+  <div class="status"><strong>Recomendación:</strong> utiliza un cable USB de datos y mantén esta ventana abierta durante todo el proceso.</div>
+  <div class="warning"><strong>Atención:</strong> la configuración anterior del equipo puede borrarse durante la instalación.</div>
+</aside>
 </div>
+
 <footer>Indy Open APRS · Indy Open Project by XE3JAC</footer>
 </main>
+
 <script type="module">
 import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.6.0/lib/index.js";
-const BAUD=115200;
-const FIRMWARES={igate:{label:"Indy Open iGate",manifest:"manifest-igate.json"},tracker:{label:"Indy Open Tracker",manifest:"manifest-tracker.json"}};
-let selectedKey="igate",manifests={},port=null,transport=null,loader=null;
-const $=id=>document.getElementById(id);
-function log(msg){const e=$("log");e.textContent+=`\n[${new Date().toLocaleTimeString()}] ${msg}`;e.scrollTop=e.scrollHeight}
-function setResult(t,c=""){const e=$("resultStatus");e.className="status"+(c?" "+c:"");e.textContent=t}
-function progress(p){$("progressBar").style.width=`${Math.max(0,Math.min(100,p))}%`}
-function part(m){return m?.builds?.find(b=>b.chipFamily==="ESP8266")?.parts?.[0]||null}
-function render(){document.querySelectorAll(".option").forEach(e=>e.classList.remove("selected"));$(selectedKey==="igate"?"optIgate":"optTracker").classList.add("selected");const c=FIRMWARES[selectedKey],m=manifests[selectedKey],p=part(m);$("selectedFirmware").textContent=c.label;$("selectedVersion").textContent=m?`v${m.version}`:"no disponible";$("selectedFile").textContent=p?.path?.split("/").pop()||"no disponible";$("flashBtn").textContent=m?`2. Instalar ${c.label} v${m.version}`:"2. Instalar firmware";if(port&&m)$("flashBtn").disabled=false}
-async function loadManifest(k){const c=FIRMWARES[k],r=await fetch(`${c.manifest}?nocache=${Date.now()}`,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const m=await r.json(),p=part(m);if(!p||p.offset!==0)throw new Error("Manifiesto ESP8266 inválido");manifests[k]=m;$(k==="igate"?"verIgate":"verTracker").textContent=`v${m.version}`;log(`${c.label} v${m.version} disponible.`)}
-async function catalog(){setResult("Consultando versiones disponibles…");log("Consultando manifiestos…");const a=await Promise.allSettled([loadManifest("igate"),loadManifest("tracker")]);a.forEach((r,i)=>{if(r.status==="rejected"){const k=i?"tracker":"igate";$(k==="igate"?"verIgate":"verTracker").textContent="no disponible";log(`ERROR ${FIRMWARES[k].label}: ${r.reason}`)}});if(!manifests.igate&&!manifests.tracker)throw new Error("No se pudo cargar ningún firmware.");if(!manifests[selectedKey])selectedKey=manifests.igate?"igate":"tracker";render();setResult("Firmware disponibles. Conecta tu ESP8266.","ok")}
-async function connect(){if(!("serial" in navigator))throw new Error("Web Serial no disponible.");if(transport){try{await transport.disconnect()}catch{}}setResult("Selecciona el puerto COM…");log("Solicitando puerto serie…");port=await navigator.serial.requestPort();transport=new Transport(port,true);loader=new ESPLoader({transport,baudrate:BAUD,terminal:{clean(){},writeLine(d){if(d)log(String(d))},write(d){if(d)log(String(d).trimEnd())}},debugLogging:false});setResult("Conectando con el bootloader…");log(`Conectando a ${BAUD} baud…`);const chip=await loader.main();$("chipName").textContent=chip||"detectado";log(`Chip detectado: ${chip}`);if(!String(chip).toUpperCase().includes("ESP8266"))throw new Error(`La placa detectada es ${chip}; sólo se admite ESP8266.`);$("flashBtn").disabled=!manifests[selectedKey];setResult("ESP8266 conectado. Listo para instalar.","ok")}
-async function getFirmware(){const m=manifests[selectedKey],p=part(m);if(!m||!p)throw new Error("No hay firmware seleccionado.");const u=new URL(p.path,new URL(FIRMWARES[selectedKey].manifest,location.href));log(`Descargando ${u.pathname.split("/").pop()}…`);setResult(`Descargando ${FIRMWARES[selectedKey].label} v${m.version}…`);const r=await fetch(`${u.href}?v=${encodeURIComponent(m.version)}`,{cache:"no-store"});if(!r.ok)throw new Error(`Descarga falló: HTTP ${r.status}`);const data=new Uint8Array(await r.arrayBuffer());log(`Firmware descargado: ${(data.length/1024).toFixed(1)} KB.`);return{m,p,data}}
-async function flash(){if(!loader)throw new Error("Primero conecta el ESP8266.");const{m,p,data}=await getFirmware();$("connectBtn").disabled=true;$("flashBtn").disabled=true;progress(0);try{log(`Instalando ${FIRMWARES[selectedKey].label} v${m.version}.`);setResult("Borrando memoria flash…");log("Borrando memoria flash…");await loader.eraseFlash();log("Memoria borrada correctamente.");progress(5);setResult("Escribiendo firmware… 0 %");await loader.writeFlash({fileArray:[{data,address:p.offset||0}],flashMode:"dio",flashFreq:"40m",flashSize:"4MB",eraseAll:false,compress:true,reportProgress:(_i,w,t)=>{const pct=t?w/t*100:0;progress(5+pct*.94);setResult(`Escribiendo firmware… ${pct.toFixed(1)} %`)}});progress(99);log("Escritura terminada.");setResult("Reiniciando ESP8266…");await loader.after("hard_reset");progress(100);setResult(`Instalación completada: ${FIRMWARES[selectedKey].label} v${m.version}. Ya puedes desconectar el ESP8266.`,"ok");log("ÉXITO: firmware instalado correctamente.");log("Ya puedes desconectar el ESP8266.")}finally{$("connectBtn").disabled=false;$("flashBtn").disabled=false}}
-document.querySelectorAll('input[name="firmware"]').forEach(i=>i.addEventListener("change",()=>{selectedKey=i.value;render();log(`Firmware seleccionado: ${FIRMWARES[selectedKey].label}.`)}));
-$("connectBtn").addEventListener("click",async()=>{try{await connect()}catch(e){setResult(e.message||String(e),"error");log(`ERROR: ${e.message||e}`);$("flashBtn").disabled=true}});
-$("flashBtn").addEventListener("click",async()=>{const m=manifests[selectedKey];if(!m)return;if(!confirm(`Se borrará la memoria y se instalará ${FIRMWARES[selectedKey].label} v${m.version}. ¿Continuar?`))return;try{await flash()}catch(e){progress(0);setResult(e.message||String(e),"error");log(`ERROR: ${e.message||e}`)}});
-if("serial" in navigator&&window.isSecureContext){$("supportStatus").className="status ok";$("supportStatus").innerHTML="<strong>Navegador compatible.</strong> Web Serial está disponible."}else{$("supportStatus").className="status error";$("supportStatus").innerHTML="<strong>Web Serial no disponible.</strong> Usa Chrome o Edge mediante HTTPS.";$("connectBtn").disabled=true}
-catalog().catch(e=>{setResult(e.message||String(e),"error");log(`ERROR: ${e.message||e}`)});
+
+const BAUD = 115200;
+
+const FIRMWARES = {
+  igate: {
+    label: "Indy Open iGate",
+    manifest: "manifest-igate.json"
+  },
+  tracker: {
+    label: "Indy Open Tracker",
+    manifest: "manifest-tracker.json"
+  }
+};
+
+let selectedKey = "igate";
+let manifests = {};
+let port = null;
+let transport = null;
+let loader = null;
+
+const $ = id => document.getElementById(id);
+
+function log(msg){
+  const el = $("log");
+  el.textContent += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setResult(text, cls=""){
+  const el = $("resultStatus");
+  el.className = "status" + (cls ? " " + cls : "");
+  el.textContent = text;
+}
+
+function setProgress(p){
+  $("progressBar").style.width = `${Math.max(0, Math.min(100, p))}%`;
+}
+
+function getPart(manifest){
+  return manifest?.builds?.find(b => b.chipFamily === "ESP8266")?.parts?.[0] || null;
+}
+
+function renderSelection(){
+  document.querySelectorAll(".option").forEach(el => el.classList.remove("selected"));
+  $(selectedKey === "igate" ? "optIgate" : "optTracker").classList.add("selected");
+
+  const cfg = FIRMWARES[selectedKey];
+  const manifest = manifests[selectedKey];
+
+  $("selectedFirmware").textContent = cfg.label;
+  $("selectedVersion").textContent = manifest?.version ? `v${manifest.version}` : "no disponible";
+  $("flashBtn").textContent = manifest?.version
+    ? `2. Instalar ${cfg.label} v${manifest.version}`
+    : "2. Instalar firmware";
+
+  $("flashBtn").disabled = !(loader && manifest);
+}
+
+async function loadManifest(key){
+  const cfg = FIRMWARES[key];
+
+  const response = await fetch(`${cfg.manifest}?nocache=${Date.now()}`, {
+    cache: "no-store"
+  });
+
+  if(!response.ok){
+    throw new Error(`No se pudo consultar ${cfg.label}.`);
+  }
+
+  const manifest = await response.json();
+  const part = getPart(manifest);
+
+  if(!part || part.offset !== 0){
+    throw new Error(`${cfg.label} no tiene una imagen válida para ESP8266.`);
+  }
+
+  manifests[key] = manifest;
+  $(key === "igate" ? "verIgate" : "verTracker").textContent = `v${manifest.version}`;
+  log(`${cfg.label} v${manifest.version} disponible.`);
+}
+
+async function loadCatalog(){
+  setResult("Consultando versiones disponibles…");
+  log("Consultando firmwares disponibles…");
+
+  const results = await Promise.allSettled([
+    loadManifest("igate"),
+    loadManifest("tracker")
+  ]);
+
+  results.forEach((result, index) => {
+    if(result.status === "rejected"){
+      const key = index === 0 ? "igate" : "tracker";
+      $(key === "igate" ? "verIgate" : "verTracker").textContent = "no disponible";
+      log(`No se pudo cargar ${FIRMWARES[key].label}.`);
+    }
+  });
+
+  if(!manifests.igate && !manifests.tracker){
+    throw new Error("No se pudo cargar ningún firmware.");
+  }
+
+  if(!manifests[selectedKey]){
+    selectedKey = manifests.igate ? "igate" : "tracker";
+    document.querySelector(`input[value="${selectedKey}"]`).checked = true;
+  }
+
+  renderSelection();
+  setResult("Firmwares disponibles. Conecta tu ESP8266.", "ok");
+}
+
+async function connectBoard(){
+  if(!("serial" in navigator)){
+    throw new Error("Tu navegador no permite la conexión USB requerida.");
+  }
+
+  if(transport){
+    try{ await transport.disconnect(); }catch{}
+  }
+
+  setResult("Selecciona el puerto del ESP8266…");
+  log("Esperando selección del puerto…");
+
+  port = await navigator.serial.requestPort();
+  transport = new Transport(port, true);
+
+  loader = new ESPLoader({
+    transport,
+    baudrate: BAUD,
+    terminal: {
+      clean(){},
+      writeLine(data){ if(data) log(String(data)); },
+      write(data){ if(data) log(String(data).trimEnd()); }
+    },
+    debugLogging: false
+  });
+
+  setResult("Conectando con el ESP8266…");
+  log("Conectando con la placa…");
+
+  const chip = await loader.main();
+
+  if(!String(chip).toUpperCase().includes("ESP8266")){
+    throw new Error("La placa conectada no parece ser un ESP8266.");
+  }
+
+  $("deviceState").textContent = "ESP8266 conectado";
+  log("ESP8266 detectado correctamente.");
+
+  renderSelection();
+  setResult("ESP8266 conectado. Listo para instalar.", "ok");
+}
+
+async function downloadFirmware(){
+  const cfg = FIRMWARES[selectedKey];
+  const manifest = manifests[selectedKey];
+  const part = getPart(manifest);
+
+  if(!manifest || !part){
+    throw new Error("No hay firmware disponible para esta opción.");
+  }
+
+  const url = new URL(part.path, new URL(cfg.manifest, location.href));
+
+  setResult(`Preparando ${cfg.label} v${manifest.version}…`);
+  log(`Preparando ${cfg.label} v${manifest.version}…`);
+
+  const response = await fetch(`${url.href}?v=${encodeURIComponent(manifest.version)}`, {
+    cache: "no-store"
+  });
+
+  if(!response.ok){
+    throw new Error("No fue posible obtener el firmware seleccionado.");
+  }
+
+  const data = new Uint8Array(await response.arrayBuffer());
+
+  if(data.length < 1024){
+    throw new Error("El firmware descargado no parece válido.");
+  }
+
+  log("Firmware preparado correctamente.");
+  return {manifest, part, data};
+}
+
+async function flashSelected(){
+  if(!loader){
+    throw new Error("Primero conecta el ESP8266.");
+  }
+
+  const cfg = FIRMWARES[selectedKey];
+  const {manifest, part, data} = await downloadFirmware();
+
+  $("connectBtn").disabled = true;
+  $("flashBtn").disabled = true;
+  setProgress(0);
+
+  try{
+    setResult("Preparando memoria…");
+    log("Preparando memoria del ESP8266…");
+    await loader.eraseFlash();
+
+    setProgress(5);
+    log("Memoria preparada.");
+    setResult("Instalando firmware… 0 %");
+
+    await loader.writeFlash({
+      fileArray: [{data, address: part.offset || 0}],
+      flashMode: "dio",
+      flashFreq: "40m",
+      flashSize: "4MB",
+      eraseAll: false,
+      compress: true,
+      reportProgress: (_fileIndex, written, total) => {
+        const pct = total ? (written / total) * 100 : 0;
+        setProgress(5 + pct * 0.94);
+        setResult(`Instalando firmware… ${pct.toFixed(1)} %`);
+      }
+    });
+
+    setProgress(99);
+    setResult("Finalizando instalación…");
+    log("Firmware escrito correctamente.");
+
+    await loader.after("hard_reset");
+
+    setProgress(100);
+    $("deviceState").textContent = "instalación completada";
+    setResult(`Instalación completada: ${cfg.label} v${manifest.version}. Ya puedes desconectar el ESP8266.`, "ok");
+    log("Instalación completada correctamente.");
+    log("Ya puedes desconectar el ESP8266.");
+
+  } finally {
+    $("connectBtn").disabled = false;
+    $("flashBtn").disabled = false;
+  }
+}
+
+document.querySelectorAll('input[name="firmware"]').forEach(input => {
+  input.addEventListener("change", () => {
+    selectedKey = input.value;
+    renderSelection();
+    log(`Seleccionado: ${FIRMWARES[selectedKey].label}.`);
+  });
+});
+
+$("connectBtn").addEventListener("click", async () => {
+  try{
+    await connectBoard();
+  }catch(e){
+    $("deviceState").textContent = "sin conectar";
+    setResult(e.message || String(e), "error");
+    log(`ERROR: ${e.message || e}`);
+    $("flashBtn").disabled = true;
+  }
+});
+
+$("flashBtn").addEventListener("click", async () => {
+  const manifest = manifests[selectedKey];
+  if(!manifest) return;
+
+  if(!confirm(`Se instalará ${FIRMWARES[selectedKey].label} v${manifest.version}. ¿Deseas continuar?`)){
+    return;
+  }
+
+  try{
+    await flashSelected();
+  }catch(e){
+    setProgress(0);
+    setResult(e.message || String(e), "error");
+    log(`ERROR: ${e.message || e}`);
+  }
+});
+
+if("serial" in navigator && window.isSecureContext){
+  $("supportStatus").className = "status ok";
+  $("supportStatus").innerHTML = "<strong>Navegador compatible.</strong> Puedes continuar.";
+}else{
+  $("supportStatus").className = "status error";
+  $("supportStatus").innerHTML = "<strong>Navegador no compatible.</strong> Abre esta página con Chrome o Edge.";
+  $("connectBtn").disabled = true;
+}
+
+loadCatalog().catch(e => {
+  setResult(e.message || String(e), "error");
+  log(`ERROR: ${e.message || e}`);
+});
 </script>
 </body>
 </html>
