@@ -5,10 +5,9 @@
 Indy Open APRS es un firmware desarrollado para una plataforma APRS formada por **ESP8266 / NodeMCU + Nano TNC basada en ATmega**. El proyecto proporciona una interfaz web para configuración, diagnóstico, mensajería APRS, telemetría, actualización OTA, respaldo y operación como iGate.
 
 > **Proyecto:** Indy Open APRS  
-> **Desarrollo del firmware actual:** XE3JAC  
+> **Desarrollo del firmware:** XE3JAC  
 > **Hardware de referencia:** PCB TA1KNN  
 > **Firmware TNC acreditado en el proyecto original:** SQ9MDD  
-> **Firmware ESP acreditado en el proyecto histórico:** HS3LSE
 
 # WEBFLASHER para ESP8266
 **https://xe3jac.github.io/IndyOpen-APRS-Project/webflasher**
