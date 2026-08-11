@@ -6,7 +6,10 @@
     {
       "chipFamily": "ESP8266",
       "parts": [
-        {"path": "firmware/indy-open-tracker-latest.bin", "offset": 0}
+        {
+          "path": "firmware/indy-open-tracker-latest.bin",
+          "offset": 0
+        }
       ]
     }
   ]
