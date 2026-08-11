@@ -1,0 +1,13 @@
+{
+  "name": "Indy Open Tracker",
+  "version": "1.5.93",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP8266",
+      "parts": [
+        {"path": "firmware/indy-open-tracker-latest.bin", "offset": 0}
+      ]
+    }
+  ]
+}

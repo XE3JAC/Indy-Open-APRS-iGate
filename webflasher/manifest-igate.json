@@ -1,0 +1,13 @@
+{
+  "name": "Indy Open iGate",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP8266",
+      "parts": [
+        {"path": "firmware/indy-open-igate-latest.bin", "offset": 0}
+      ]
+    }
+  ]
+}
