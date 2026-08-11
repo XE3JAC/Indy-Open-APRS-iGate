@@ -364,14 +364,13 @@ La publicación histórica del proyecto APRS iGATE acredita:
 
 | Elemento | Autor / referencia |
 |---|---|
+| Firmware actual | **XE3JAC** |
+| Firmware actual TNC | **XE3JAC** |
 | PCB / hardware | **TA1KNN** |
-| Firmware ESP del proyecto original | **HS3LSE** |
-| Firmware TNC | **SQ9MDD** |
-| Firmware actual documentado aquí | **Indy Open APRS / XE3JAC** |
+| Firmware original TNC | **SQ9MDD** |
 
-Indy Open APRS es un firmware posterior y propio para ESP8266. La referencia a **PCB TA1KNN** describe la plataforma física utilizada como base y no implica autoría del firmware Indy Open APRS.
-
-Se recomienda conservar los créditos, licencias y avisos que acompañen a cualquier firmware o código de terceros que se distribuya con el proyecto.
+Indy Open APRS es un firmware posterior y propio para ESP8266. 
+La referencia a **PCB TA1KNN** describe la plataforma física utilizada como base y no implica autoría del firmware Indy Open APRS.
 
 ---
 
