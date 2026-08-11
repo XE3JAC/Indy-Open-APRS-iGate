@@ -1,6 +1,6 @@
 {
   "name": "Indy Open APRS",
-  "version": "1.5.92",
+  "version": "tracker-v1.5.93",
   "new_install_prompt_erase": true,
   "builds": [
     {
