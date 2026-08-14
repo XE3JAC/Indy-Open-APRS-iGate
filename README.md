@@ -15,6 +15,8 @@ Indy Open APRS es un firmware desarrollado para una plataforma APRS formada por 
 
 # WEBFLASHER - TNC
 **https://xe3jac.github.io/Indy-Open-APRS-iGate/tnc-webflasher**
+# Indy Open iGate Manual
+**https://xe3jac.github.io/Indy-Open-APRS-iGate/**
 
 ---
 
