@@ -27,7 +27,8 @@ Indy Open APRS es un firmware desarrollado para una plataforma APRS formada por 
 - [3. Perfiles de firmware: iGate y Tracker](#3-perfiles-de-firmware-igate-y-tracker)
 - [4. Accesos y seguridad](#4-accesos-y-seguridad)
 - [5. Configuración general](#5-configuración-general)
-- [6. Mensajes APRS](#6-mensajes-aprs)
+- [6. Mensajes APRS y programados](#6-mensajes-aprs-y-programados)
+- [7. Notificaciones](#7-notificaciones)
 - [7. Estado y contactos](#7-estado-y-contactos)
 - [8. Actualización OTA](#8-actualización-ota)
 - [9. Respaldo y restauración](#9-respaldo-y-restauración)
@@ -266,28 +267,62 @@ La interfaz permite habilitar o deshabilitar funciones como beep, orientación O
 
 ---
 
-## 6. Mensajes APRS
+## 6. Mensajes APRS y programados
 
 ![Pantalla de mensajes APRS](images/manual_04.png)
 
 ![Selección de ruta de mensajes](images/manual_05.png)
 
-Para enviar un mensaje:
+El perfil **iGate** permite enviar mensajes APRS por **RF**, **Internet** o **RF + Internet**. El perfil **Tracker** utiliza mensajes únicamente por RF y no dispone de programación.
 
-1. Introduzca el indicativo en **Destino APRS**.
-2. Escriba el texto.
-3. Seleccione la ruta:
- - Por RF
- - Por Internet
- - RF + Internet
-4. Pulse **Enviar mensaje**.
-5. Consulte el historial para verificar el estado.
+### Mensajes programados y calendario
 
-El historial puede mostrar estados como **Pendiente**, **Confirmado**, **Reenviado** o **Sin respuesta**.
+El iGate permite programar mensajes para una **fecha y hora local**. Se indica el destino APRS, el texto, la ruta y el momento de envío mediante el selector de calendario y hora.
+
+![Calendario de mensajes programados](images/manual_mensajes_programados.png)
+
+Los mensajes pendientes aparecen en **Mensajes Programados**, donde se muestran su fecha y hora, destino y ruta.
+
+> La programación de mensajes corresponde al perfil **iGate**. El Tracker no dispone de calendario de mensajes programados.
 
 ---
 
-## 7. Estado y contactos
+## 7. Notificaciones
+
+El iGate integra **Indy Open APRS Notify** para recibir avisos del estado del sistema.
+
+![Indy Open APRS Notify y selección de eventos](images/manual_notificaciones.png)
+
+### Vinculación
+
+1. Pulse **Generar Código**.
+2. Abra Telegram y busque el Bot de **Indy Open APRS Notify**.
+3. Envíe `/start`.
+4. Envíe `/link` seguido del código generado.
+
+El código es válido durante **10 minutos**.
+
+### Eventos disponibles
+
+`SYSTEM_START` notifica el inicio del sistema. Además pueden seleccionarse hasta **3 notificaciones adicionales**:
+
+- `WIFI_RECONNECTED` — Wi-Fi reconectado.
+- `APRS_CONNECTED` — APRS-IS conectado.
+- `APRS_DOWN` — APRS-IS desconectado durante 5 minutos.
+- `TNC_DOWN` — TNC sin respuesta.
+- `RAM_LOW` — RAM baja.
+- `STORAGE_LOW` — almacenamiento interno bajo.
+- `MESSAGE_RECEIVED` — mensaje APRS recibido.
+- `BEACON_FAILED` — fallo de baliza.
+- `SENSOR_ERROR` — error de sensor.
+
+Para `STORAGE_LOW`, la interfaz indica menos de **64 KB libres en LittleFS durante 5 minutos**. LittleFS es el almacenamiento interno utilizado por configuración y registros; no representa la RAM.
+
+> Indy Open APRS Notify corresponde al perfil **iGate**. El Tracker no utiliza esta función.
+
+---
+
+## 8. Estado y contactos
 
 ![Estado general del sistema](images/manual_06.png)
 
@@ -310,7 +345,7 @@ La sección **Contactos** muestra actividad reciente por RF e información de es
 
 ---
 
-## 8. Actualización OTA
+## 9. Actualización OTA
 
 ![Actualización OTA](images/manual_08.png)
 
@@ -326,7 +361,7 @@ La actualización OTA permite instalar una nueva versión del firmware del ESP82
 
 ---
 
-## 9. Respaldo y restauración
+## 10. Respaldo y restauración
 
 ![Respaldo y restauración](images/manual_09.png)
 
@@ -346,7 +381,7 @@ Elimina configuración, mensajes, registros y contactos, pero conserva el firmwa
 
 ---
 
-## 10. Registro
+## 11. Registro
 
 ![Registro del sistema](images/manual_10.png)
 
@@ -362,7 +397,7 @@ También se puede consultar `log.txt`.
 
 ---
 
-## 11. Pantalla OLED
+## 12. Pantalla OLED
 
 ![Ayuda integrada y referencia OLED](images/manual_11.png)
 
@@ -380,7 +415,7 @@ La pantalla OLED también puede mostrar un bitmap monocromático de **128×64 p�
 
 ---
 
-## 12. Instalación inicial por USB
+## 13. Instalación inicial por USB
 
 El firmware del ESP8266 y el firmware de la Nano TNC son independientes.
 
@@ -400,7 +435,7 @@ Para la primera conexión recuerde las credenciales predefinidas: **usuario/SSID
 
 ---
 
-## 13. Nano TNC basada en ATmega
+## 14. Nano TNC basada en ATmega
 
 La Nano TNC realiza la interfaz APRS por RF y utiliza firmware independiente.
 
@@ -419,7 +454,7 @@ La publicación histórica de la plataforma acredita el firmware TNC a **SQ9MDD*
 
 ---
 
-## 14. Instalación mediante Web Flasher
+## 15. Instalación mediante Web Flasher
 
 El Web Flasher permite realizar la instalación inicial del firmware del ESP8266 directamente desde un navegador compatible.
 
@@ -456,7 +491,7 @@ El Web Flasher permite realizar la instalación inicial del firmware del ESP8266
 
 ---
 
-## 15. Historia y créditos
+## 16. Historia y créditos
 
 Indy Open APRS utiliza como plataforma de referencia la arquitectura de hardware de la **PCB TA1KNN**.
 
