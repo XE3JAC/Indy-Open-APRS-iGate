@@ -1,6 +1,6 @@
 {
   "name": "Indy Open Tracker",
-  "version": "1.5.101",
+  "version": "1.5.108",
   "new_install_prompt_erase": true,
   "builds": [
     {
