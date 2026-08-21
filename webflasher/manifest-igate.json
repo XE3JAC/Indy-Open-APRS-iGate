@@ -1,6 +1,6 @@
 {
   "name": "Indy Open iGate",
-  "version": "1.5.122",
+  "version": "1.5.123",
   "new_install_prompt_erase": true,
   "builds": [
     {
