@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Manual completo de Indy Open APRS para ESP8266, Nano TNC y PCB TA1KNN.">
+<meta name="description" content="Manual completo de Indy Open APRS para los perfiles iGate y Tracker, ESP8266, Nano TNC y PCB TA1KNN.">
 <title>Indy Open APRS — Manual</title>
 <style>
 :root{--bg:#f4f8f9;--panel:#fff;--text:#17363b;--muted:#61777c;--accent:#0e7c86;--dark:#0b2d33;--line:#d9e5e7;--soft:#eaf6f7}
@@ -24,6 +24,14 @@ table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:11px 12p
 footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 .mobile{display:none;background:var(--dark);color:white;padding:12px 15px;position:sticky;top:0;z-index:10}
 @media(max-width:900px){.layout{display:block}aside{display:none}.mobile{display:block}.mobile a{color:white}}
+
+.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.profile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+.profile h3{margin-top:0}
+.pill{display:inline-block;background:var(--soft);color:var(--accent);font-weight:700;border-radius:999px;padding:4px 9px;margin:2px 3px 2px 0;font-size:.86rem}
+.compare{overflow-x:auto;margin:20px 0}
+@media(max-width:700px){.profile-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -34,26 +42,27 @@ footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 <nav id="contenido">
 <a href="#general">1. Descripción general</a>
 <a href="#arquitectura">2. Arquitectura</a>
-<a href="#accesos">3. Accesos</a>
-<a href="#config">4. Configuración</a>
-<a href="#mensajes">5. Mensajes</a>
-<a href="#estado">6. Estado</a>
-<a href="#ota">7. OTA</a>
-<a href="#respaldo">8. Respaldo</a>
-<a href="#registro">9. Registro</a>
-<a href="#oled">10. OLED</a>
-<a href="#usb">11. USB</a>
-<a href="#tnc">12. Nano TNC</a>
-<a href="#webflasher">13. Web Flasher</a>
-<a href="#historia">14. Historia y créditos</a>
-<a href="#recomendaciones">15. Recomendaciones</a>
+<a href="#perfiles">3. iGate y Tracker</a>
+<a href="#accesos">4. Accesos</a>
+<a href="#config">5. Configuración</a>
+<a href="#mensajes">6. Mensajes</a>
+<a href="#estado">7. Estado</a>
+<a href="#ota">8. OTA</a>
+<a href="#respaldo">9. Respaldo</a>
+<a href="#registro">10. Registro</a>
+<a href="#oled">11. OLED</a>
+<a href="#usb">12. USB</a>
+<a href="#tnc">13. Nano TNC</a>
+<a href="#webflasher">14. Web Flasher</a>
+<a href="#historia">15. Historia y créditos</a>
+<a href="#recomendaciones">16. Recomendaciones</a>
 </nav>
 </aside>
 <main>
 <header class="hero"><div>
-<div>Indy Open Project by XE3JAC - Documentación Ver. 1.5.37</div>
+<div>Indy Open Project by XE3JAC · Manual iGate y Tracker</div>
 <h1>INDY OPEN APRS</h1>
-<p>Manual completo de instalación, configuración y operación para ESP8266 / NodeMCU, Nano TNC basada en ATmega y plataforma de hardware TA1KNN.</p>
+<p>Manual de instalación, configuración y operación de Indy Open iGate e Indy Open Tracker para ESP8266 / NodeMCU, Nano TNC basada en ATmega y plataforma de hardware TA1KNN.</p>
 <div class="tags"><span class="tag">ESP8266</span><span class="tag">Nano TNC</span><span class="tag">TA1KNN</span><span class="tag">APRS-IS</span><span class="tag">RF</span></div>
 </div></header>
 <div class="content">
@@ -74,7 +83,56 @@ footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 <p>El ESP8266 ejecuta Indy Open APRS. La Nano TNC utiliza firmware independiente y atiende la comunicación APRS por RF mediante TNC/KISS.</p>
 </section>
 
-<section id="accesos"><h2>3. Accesos y seguridad</h2><figure><img loading="lazy" src="images/manual_01.png" alt="Pantalla Accesos y seguridad"><figcaption>Pantalla Accesos y seguridad</figcaption></figure>
+
+<section id="perfiles"><h2>3. Perfiles de firmware: iGate y Tracker</h2>
+<p>Indy Open APRS dispone de dos perfiles principales que comparten la plataforma ESP8266 / NodeMCU + Nano TNC, pero están orientados a funciones diferentes.</p>
+
+<div class="compare"><table><thead><tr><th>Función</th><th>Indy Open iGate</th><th>Indy Open Tracker</th></tr></thead><tbody>
+<tr><td>APRS por RF</td><td>Sí</td><td>Sí</td></tr>
+<tr><td>APRS-IS</td><td>Sí</td><td>No</td></tr>
+<tr><td>Balizas</td><td>RF y APRS-IS</td><td>RF mediante GPS</td></tr>
+<tr><td>Mensajes</td><td>RF, Internet o ambos; hasta 7 programados</td><td>Sólo RF; sin programación</td></tr>
+<tr><td>Digipeater</td><td>New-N limitado + WIDE1-1 opcional</td><td>Fill-in WIDE1-1</td></tr>
+<tr><td>SmartBeaconing</td><td>—</td><td>Sí</td></tr>
+<tr><td>Indy Open APRS Notify</td><td>Sí</td><td>No</td></tr>
+</tbody></table></div>
+
+<div class="profile-grid">
+<div class="profile">
+<h3>Indy Open iGate</h3>
+
+<p>Recibe APRS por RF, publica tráfico válido en APRS-IS y transmite balizas por RF y APRS-IS. Las salidas son independientes; APRS-IS requiere una sesión validada mediante <code>logresp ... verified</code>.</p>
+<h3>Digipeater</h3>
+<ul><li>New-N limitado para <code>WIDE2-1</code> y <code>WIDE2-2</code>.</li><li>No repite <code>WIDE3-n</code> ni superiores.</li><li>El soporte Fill-in <code>WIDE1-1</code> depende del interruptor principal.</li><li>Evita duplicados y loops.</li></ul>
+<h3>Notify</h3>
+<p>Puede vincularse con Indy Open APRS Notify mediante un código temporal. El ESP8266 utiliza Indy Open Notify Relay y no Telegram directo.</p>
+</div>
+
+<div class="profile">
+<h3>Indy Open Tracker</h3>
+
+<p>Genera balizas APRS de posición y telemetría por <strong>RF</strong> a partir del GPS. No utiliza APRS-IS ni Indy Open Notify/Telegram.</p>
+<h3>GPS y SmartBeaconing</h3>
+<p>Baudios GPS: <code>4800</code>, <code>9600</code>, <code>19200</code>, <code>38400</code>, <code>57600</code> y <code>115200</code>. Predeterminado: <strong>9600</strong>.</p>
+<p>SmartBeaconing adapta los intervalos según velocidad, giro y estado estacionado. Desactivado, utiliza el intervalo fijo.</p>
+<h3>Ruta RF y Digipeater</h3>
+<p>Ruta inicial: <code>WIDE1-1,WIDE2-1</code>. Una ruta vacía transmite directa.</p>
+<p>El Digipeater del Tracker funciona exclusivamente como <strong>Fill-in WIDE1-1</strong>; no consume WIDE2 ni funciona como New-N.</p>
+</div>
+</div>
+
+<div class="note"><strong>Importante:</strong> iGate y Tracker utilizan binarios diferentes. OTA y Web Flasher deben utilizar el firmware correspondiente al perfil deseado.</div>
+
+<h3>Funciones específicas del Tracker</h3>
+<div class="cards">
+<div class="card"><strong>Ubicación de Prueba</strong><p>Permanece 30 minutos en RAM, sólo sirve para Baliza de Prueba RF y desaparece al reiniciar o recibir GPS real.</p></div>
+<div class="card"><strong>Mensajes</strong><p>Son únicamente por RF y no dispone de programación de mensajes.</p></div>
+<div class="card"><strong>Estadísticas RF</strong><p>Estaciones, paquetes, DIGI, DX, nivel RX, audio dBV y última recepción.</p></div>
+<div class="card"><strong>Sensores</strong><p>La telemetría sólo se agrega cuando el sensor está habilitado y tiene una lectura válida.</p></div>
+</div>
+</section>
+
+<section id="accesos"><h2>4. Accesos y seguridad</h2><figure><img loading="lazy" src="images/manual_01.png" alt="Pantalla Accesos y seguridad"><figcaption>Pantalla Accesos y seguridad</figcaption></figure>
 <p>Permite configurar el nombre y contraseña del AP local, además del usuario y contraseña utilizados para operaciones OTA.</p>
 <h3>Credenciales predeterminadas</h3>
 <table><thead><tr><th>Acceso</th><th>Usuario / SSID</th><th>Contraseña</th></tr></thead><tbody>
@@ -85,8 +143,8 @@ footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 <div class="note warn"><strong>Precaución:</strong> conserve las credenciales OTA en un lugar seguro.</div>
 </section>
 
-<section id="config"><h2>4. Configuración general</h2><figure><img loading="lazy" src="images/manual_02.png" alt="Configuración de red, APRS-IS y estación"><figcaption>Configuración de red, APRS-IS y estación</figcaption></figure>
-<h3>Modo de operación</h3><p>Determina la función principal del equipo: iGate, Digipeater o Tracker según la versión instalada.</p>
+<section id="config"><h2>5. Configuración general</h2><figure><img loading="lazy" src="images/manual_02.png" alt="Configuración de red, APRS-IS y estación"><figcaption>Configuración de red, APRS-IS y estación</figcaption></figure>
+<h3>Modo de operación</h3><p>Las opciones visibles dependen del perfil instalado. iGate incorpora APRS-IS y funciones de gateway; Tracker incorpora GPS, SmartBeaconing y operación orientada a balizas móviles.</p>
 <h3>Red</h3><p>Wi-Fi SSID, contraseña, DHCP/IP estática, máscara, gateway y DNS.</p>
 <h3>APRS-IS</h3><p>Indicativo, passcode, servidor, puerto y filtro APRS-IS.</p>
 <h3>Estación</h3><p>Latitud, longitud, símbolo, comentario, estado, intervalo de baliza y ruta RF.</p>
@@ -95,47 +153,52 @@ footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 <h3>Telemetría</h3><p>Incluye opciones relacionadas con beep, OLED, reenvío APRS-IS → RF, voltaje y sensores.</p>
 </section>
 
-<section id="mensajes"><h2>5. Mensajes APRS</h2><figure><img loading="lazy" src="images/manual_04.png" alt="Mensajes APRS"><figcaption>Mensajes APRS</figcaption></figure><figure><img loading="lazy" src="images/manual_05.png" alt="Selección de ruta"><figcaption>Selección de ruta</figcaption></figure>
-<ol><li>Introduzca el destino.</li><li>Escriba el mensaje.</li><li>Seleccione RF, Internet o RF + Internet.</li><li>Pulse Enviar mensaje.</li><li>Revise el historial.</li></ol>
+<section id="mensajes"><h2>6. Mensajes APRS</h2><figure><img loading="lazy" src="images/manual_04.png" alt="Mensajes APRS"><figcaption>Mensajes APRS</figcaption></figure><figure><img loading="lazy" src="images/manual_05.png" alt="Selección de ruta"><figcaption>Selección de ruta</figcaption></figure>
+<p><strong>iGate:</strong> permite enviar por RF, Internet o RF + Internet y admite hasta siete mensajes programados.</p><p><strong>Tracker:</strong> los mensajes son exclusivamente por RF y no dispone de programación de mensajes.</p>
 </section>
 
-<section id="estado"><h2>6. Estado y contactos</h2><figure><img loading="lazy" src="images/manual_06.png" alt="Estado general"><figcaption>Estado general</figcaption></figure>
+<section id="estado"><h2>7. Estado y contactos</h2><figure><img loading="lazy" src="images/manual_06.png" alt="Estado general"><figcaption>Estado general</figcaption></figure>
 <p>La pantalla muestra tiempo encendido, red, APRS-IS, TNC/KISS, RX/TX RF, sensores, voltaje y OLED.</p>
 <figure><img loading="lazy" src="images/manual_07.png" alt="Contactos y actividad RF"><figcaption>Contactos y actividad RF</figcaption></figure><p>Contactos resume actividad RF reciente y estaciones recibidas.</p>
 </section>
 
-<section id="ota"><h2>7. Actualización OTA</h2><figure><img loading="lazy" src="images/manual_08.png" alt="Actualización OTA"><figcaption>Actualización OTA</figcaption></figure>
-<p>Seleccione un archivo <code>.bin</code> creado para el ESP8266, inicie la actualización y espere a que termine.</p>
+<section id="ota"><h2>8. Actualización OTA</h2><figure><img loading="lazy" src="images/manual_08.png" alt="Actualización OTA"><figcaption>Actualización OTA</figcaption></figure>
+<p>Seleccione un archivo <code>.bin</code> creado para el ESP8266 y para el perfil correcto. OTA conserva configuración e historiales: utilice únicamente un binario iGate en iGate y Tracker en Tracker.</p>
 <div class="note warn"><strong>Precaución:</strong> no interrumpa la alimentación ni cierre la página durante la escritura.</div>
 </section>
 
-<section id="respaldo"><h2>8. Respaldo y restauración</h2><figure><img loading="lazy" src="images/manual_09.png" alt="Respaldo, restauración y borrado"><figcaption>Respaldo, restauración y borrado</figcaption></figure>
+<section id="respaldo"><h2>9. Respaldo y restauración</h2><figure><img loading="lazy" src="images/manual_09.png" alt="Respaldo, restauración y borrado"><figcaption>Respaldo, restauración y borrado</figcaption></figure>
 <p>Permite descargar la configuración, restaurar un respaldo o borrar configuraciones conservando el firmware.</p>
 </section>
 
-<section id="registro"><h2>9. Registro</h2><figure><img loading="lazy" src="images/manual_10.png" alt="Registro del sistema"><figcaption>Registro del sistema</figcaption></figure>
-<p>Los filtros de diagnóstico incluyen Todo, Sistema, APRS-IS, RF / DIGI y Errores. También puede consultarse <code>log.txt</code>.</p>
+<section id="registro"><h2>10. Registro</h2><figure><img loading="lazy" src="images/manual_10.png" alt="Registro del sistema"><figcaption>Registro del sistema</figcaption></figure>
+<p>Los filtros de diagnóstico permiten revisar la actividad del sistema. En iGate incluyen eventos de APRS-IS y RF/DIGI; Tracker mantiene su propio registro RF.</p>
+<h3>UART TNC y KISS</h3>
+<p><code>UART TNC perdidos ESP→TNC / TNC→ESP</code> indica bytes descartados por overflow UART, no paquetes APRS correctos. Una trama KISS fragmentada se conserva entre ciclos; si no llega <code>0xC0</code> en 250 ms, se descarta.</p>
+<h3>RAM libre ESP8266 mínima</h3>
+<ul><li><strong>Bien:</strong> 12 KB o más.</li><li><strong>Normal:</strong> 8 KB a menos de 12 KB.</li><li><strong>Baja:</strong> menos de 8 KB.</li></ul>
+<p>Esta etiqueta es informativa y no modifica los umbrales internos.</p>
 </section>
 
-<section id="oled"><h2>10. Pantalla OLED</h2><figure><img loading="lazy" src="images/manual_11.png" alt="Ayuda integrada y referencia OLED"><figcaption>Ayuda integrada y referencia OLED</figcaption></figure>
+<section id="oled"><h2>11. Pantalla OLED</h2><figure><img loading="lazy" src="images/manual_11.png" alt="Ayuda integrada y referencia OLED"><figcaption>Ayuda integrada y referencia OLED</figcaption></figure>
 <p>La OLED utilizada es de 0.96 pulgadas y 128×64 píxeles. Las tres vistas operativas son fijas y se cambia entre ellas pulsando el switch o botón físico del sistema.</p>
 <ul><li>Vista de sistema e iGate.</li><li>Vista TNC/KISS y RF.</li><li>Vista de sensores y estado I2C/OLED.</li></ul>
 <p>También puede mostrarse un bitmap monocromático 128×64 como pantalla de inicio.</p>
 </section>
 
-<section id="usb"><h2>11. Instalación inicial por USB</h2>
+<section id="usb"><h2>12. Instalación inicial por USB</h2>
 <ol><li>Conecte el ESP8266 mediante un cable USB de datos.</li><li>Identifique el puerto serie.</li><li>Seleccione el firmware correcto.</li><li>Inicie la programación.</li><li>Espere la confirmación.</li><li>Reinicie y realice la configuración inicial usando las credenciales predeterminadas <code>admin</code> / <code>indygate</code>.</li></ol>
 </section>
 
-<section id="tnc"><h2>12. Nano TNC basada en ATmega</h2>
+<section id="tnc"><h2>13. Nano TNC basada en ATmega</h2>
 <p>La Nano TNC es independiente del firmware Indy Open del ESP8266. Debe programarse con su firmware específico.</p>
 <ol><li>Conecte la Nano por USB.</li><li>Identifique el puerto.</li><li>Confirme ATmega/bootloader.</li><li>Cargue el firmware TNC.</li><li>Espere la verificación.</li><li>Reconecte la Nano al sistema.</li><li>Compruebe TNC/KISS desde Indy Open APRS.</li></ol>
 <p>La publicación histórica del proyecto acredita el firmware TNC a <strong>SQ9MDD</strong>.</p>
 </section>
 
-<section id="webflasher"><h2>13. Instalación mediante Web Flasher</h2>
+<section id="webflasher"><h2>14. Instalación mediante Web Flasher</h2>
 <p>El Web Flasher permite instalar el firmware del ESP8266 desde un navegador compatible utilizando USB.</p>
-<ol><li>Conecte el ESP8266.</li><li>Abra el Web Flasher.</li><li>Autorice el acceso al puerto serie.</li><li>Inicie la instalación.</li><li>Espere al 100 %.</li><li>Reinicie el equipo.</li></ol>
+<ol><li>Conecte el ESP8266.</li><li>Abra el Web Flasher.</li><li>Seleccione el perfil <strong>iGate</strong> o <strong>Tracker</strong>.</li><li>Autorice el acceso al puerto serie.</li><li>Inicie la instalación.</li><li>Espere al 100 %.</li><li>Reinicie el equipo.</li></ol>
 <table><thead><tr><th>Método</th><th>Conexión</th><th>Uso</th></tr></thead><tbody>
 <tr><td>Web Flasher</td><td>USB</td><td>Primera instalación o recuperación</td></tr>
 <tr><td>OTA</td><td>Red</td><td>Actualización de un equipo ya operativo</td></tr>
@@ -143,7 +206,7 @@ footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 </tbody></table>
 </section>
 
-<section id="historia"><h2>14. Historia y créditos</h2>
+<section id="historia"><h2>15. Historia y créditos</h2>
 <p>Indy Open APRS utiliza como plataforma física de referencia la PCB TA1KNN. El firmware Indy Open APRS es un desarrollo posterior para el ESP8266.</p>
 <table><thead><tr><th>Elemento</th><th>Autor / referencia</th></tr></thead><tbody>
 <tr><td>Firmware actual</td><td><strong>XE3JAC</strong></td></tr>
@@ -156,7 +219,7 @@ footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted)}
 <p>Se recomienda conservar las licencias, avisos y créditos que acompañen cualquier componente de terceros que se distribuya con el proyecto.</p>
 </section>
 
-<section id="recomendaciones"><h2>15. Recomendaciones</h2>
+<section id="recomendaciones"><h2>16. Recomendaciones</h2>
 <ul><li>Configure accesos y red antes de operar.</li><li>Cambie las credenciales predeterminadas <code>admin</code> / <code>indygate</code> después de la primera configuración.</li><li>Verifique el modo de operación.</li><li>Compruebe indicativo, posición y ruta RF.</li><li>Use Estado y Registro para diagnóstico.</li><li>Realice un respaldo de una configuración estable.</li><li>Mantenga alimentación estable durante OTA y Web Flasher.</li><li>No mezcle el firmware del ESP8266 con el de la Nano TNC.</li></ul>
 </section>
 

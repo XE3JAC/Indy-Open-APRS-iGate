@@ -1,4 +1,4 @@
-# Indy Open APRS - Documentación Ver. 1.5.37
+# Indy Open APRS — Documentación iGate y Tracker
 
 **Firmware APRS abierto para ESP8266 basado en la plataforma de hardware TA1KNN**
 
@@ -8,7 +8,7 @@ Indy Open APRS es un firmware desarrollado para una plataforma APRS formada por 
 - **Firmware actual:** XE3JAC
 - **Firmware TNC actual:** XE3JAC
 - **Firmware TNC original:** SQ9MDD
-- **Hardware de referencia:** TA1KNN    
+- **Hardware de referencia:** TA1KNN
 
 # WEBFLASHER - Indy Open iGate o Indy Open Tracker
 **https://xe3jac.github.io/Indy-Open-APRS-iGate/webflasher**
@@ -24,19 +24,20 @@ Indy Open APRS es un firmware desarrollado para una plataforma APRS formada por 
 
 - [1. Descripción general](#1-descripción-general)
 - [2. Arquitectura del sistema](#2-arquitectura-del-sistema)
-- [3. Accesos y seguridad](#3-accesos-y-seguridad)
-- [4. Configuración general](#4-configuración-general)
-- [5. Mensajes APRS](#5-mensajes-aprs)
-- [6. Estado y contactos](#6-estado-y-contactos)
-- [7. Actualización OTA](#7-actualización-ota)
-- [8. Respaldo y restauración](#8-respaldo-y-restauración)
-- [9. Registro](#9-registro)
-- [10. Pantalla OLED](#10-pantalla-oled)
-- [11. Instalación inicial por USB](#11-instalación-inicial-por-usb)
-- [12. Nano TNC basada en ATmega](#12-nano-tnc-basada-en-atmega)
-- [13. Instalación mediante Web Flasher](#13-instalación-mediante-web-flasher)
-- [14. Historia y créditos](#14-historia-y-créditos)
-- [15. Recomendaciones](#15-recomendaciones)
+- [3. Perfiles de firmware: iGate y Tracker](#3-perfiles-de-firmware-igate-y-tracker)
+- [4. Accesos y seguridad](#4-accesos-y-seguridad)
+- [5. Configuración general](#5-configuración-general)
+- [6. Mensajes APRS](#6-mensajes-aprs)
+- [7. Estado y contactos](#7-estado-y-contactos)
+- [8. Actualización OTA](#8-actualización-ota)
+- [9. Respaldo y restauración](#9-respaldo-y-restauración)
+- [10. Registro](#10-registro)
+- [11. Pantalla OLED](#11-pantalla-oled)
+- [12. Instalación inicial por USB](#12-instalación-inicial-por-usb)
+- [13. Nano TNC basada en ATmega](#13-nano-tnc-basada-en-atmega)
+- [14. Instalación mediante Web Flasher](#14-instalación-mediante-web-flasher)
+- [15. Historia y créditos](#15-historia-y-créditos)
+- [16. Recomendaciones](#16-recomendaciones)
 
 ---
 
@@ -84,7 +85,104 @@ La Nano TNC utiliza su propio firmware y realiza las funciones TNC/KISS necesari
 
 ---
 
-## 3. Accesos y seguridad
+
+## 3. Perfiles de firmware: iGate y Tracker
+
+Indy Open APRS dispone de dos perfiles principales para el ESP8266. Comparten la plataforma **ESP8266 / NodeMCU + Nano TNC basada en ATmega**, pero sus funciones son diferentes.
+
+| Función | Indy Open iGate | Indy Open Tracker |
+|---|---|---|
+| APRS por RF | Sí | Sí |
+| APRS-IS | Sí | No |
+| Balizas | RF y APRS-IS | RF mediante GPS |
+| Mensajes | RF, Internet o ambos; hasta 7 programados | Sólo RF; sin programación |
+| Digipeater | New-N limitado + WIDE1-1 opcional | Fill-in WIDE1-1 |
+| GPS | No es la base de operación descrita | Sí |
+| SmartBeaconing | No documentado en este perfil | Sí |
+| Indy Open APRS Notify | Sí | No |
+
+### 3.1 Indy Open iGate
+
+Indy Open iGate recibe APRS por RF, lo reporta a APRS-IS y transmite balizas por RF y APRS-IS. Las salidas son independientes: RF puede transmitir sin APRS-IS validado; APRS-IS requiere `logresp ... verified`.
+
+**Digipeater iGate**
+
+- **Activar Digipeater APRS** es el interruptor principal.
+- Atiende `WIDE2-1` y `WIDE2-2`.
+- No repite `WIDE3-n` ni superiores.
+- Conserva digipeaters ya usados y evita duplicados y loops.
+- **Permitir Digipeater de Relleno WIDE1-1** sólo funciona si el Digipeater principal está activo.
+- La Ruta RF de las balizas propias no determina qué tráfico procesa el DIGI.
+
+**RF → APRS-IS**
+
+Las tramas RF válidas se publican añadiendo `,qAR,<INDICATIVO-IGATE>`. Para evitar bucles se omiten TCPIP/TCPXX, NOGATE, RFONLY, rutas qxx, consultas genéricas, tráfico propio repetido y duplicados.
+
+**Indy Open APRS Notify**
+
+1. Pulsa **Generar Código**.
+2. Abre el bot **Indy Open APRS Notify** en Telegram.
+3. Envía `/link CODIGO`.
+
+El código dura 10 minutos. La `device_key` es interna y nunca se muestra. El ESP8266 no utiliza Telegram directamente: las notificaciones pasan por Indy Open Notify Relay.
+
+### 3.2 Indy Open Tracker
+
+Indy Open Tracker genera balizas APRS de posición y telemetría por **RF** a partir del GPS. **No usa APRS-IS ni Indy Open Notify/Telegram.**
+
+**Red y portal**
+
+- **Activar Wi-Fi para configuración** abre el portal local mediante Wi-Fi.
+- SSID y contraseña bastan para DHCP.
+- IP estática, máscara, gateway y DNS sólo se usan para IP fija.
+- El Access Point `IndyOpenTracker` permanece disponible para configuración.
+- OTA conserva configuración e historiales y debe utilizar únicamente un binario Tracker.
+
+**GPS**
+
+Baudios disponibles: `4800`, `9600`, `19200`, `38400`, `57600` y `115200`. El valor predeterminado es **9600**. Al guardar el valor, el puerto GPS se reabre inmediatamente.
+
+Las balizas normales requieren fijación GPS válida.
+
+**Ubicación de Prueba**
+
+- Vive sólo en RAM durante 30 minutos.
+- Se utiliza únicamente para **Baliza de Prueba RF**.
+- Desaparece al reiniciar.
+- Desaparece al recibir GPS real.
+
+**Balizas y Ruta RF**
+
+Indicativo APRS, símbolo, comentario, Estado APRS, intervalo y Ruta RF construyen las balizas. La ruta inicial es:
+
+`WIDE1-1,WIDE2-1`
+
+Una ruta vacía transmite directa.
+
+**SmartBeaconing**
+
+Controla velocidades, intervalos, giro, tiempo estacionado y símbolo estacionado. Si se desactiva, se utiliza el intervalo fijo.
+
+**Digipeater Tracker**
+
+**Activar Digipeater APRS** es el único control. Activado funciona exclusivamente como **Fill-in WIDE1-1**:
+
+- Repite una solicitud `WIDE1-1` pendiente.
+- Conserva el resto del path.
+- No consume `WIDE2-1`, `WIDE2-2` ni otros `WIDEn-N`.
+- No funciona como New-N.
+- Mantiene protección contra trama propia, loops y duplicados de 30 segundos.
+- Si coinciden una baliza propia y un DIGI pendiente, el DIGI tiene prioridad.
+
+**Mensajes y estadísticas**
+
+Los mensajes del Tracker son **sólo RF** y no hay programación de mensajes.
+
+Las estadísticas RF conservan estaciones, paquetes, DIGI, DX, nivel RX, audio dBV y última RX.
+
+---
+
+## 4. Accesos y seguridad
 
 ![Pantalla Accesos y seguridad](images/manual_01.png)
 
@@ -110,7 +208,7 @@ En una instalación nueva, las credenciales predefinidas son:
 
 ---
 
-## 4. Configuración general
+## 5. Configuración general
 
 ![Configuración de red, APRS-IS y estación](images/manual_02.png)
 
@@ -168,7 +266,7 @@ La interfaz permite habilitar o deshabilitar funciones como beep, orientación O
 
 ---
 
-## 5. Mensajes APRS
+## 6. Mensajes APRS
 
 ![Pantalla de mensajes APRS](images/manual_04.png)
 
@@ -179,9 +277,9 @@ Para enviar un mensaje:
 1. Introduzca el indicativo en **Destino APRS**.
 2. Escriba el texto.
 3. Seleccione la ruta:
-   - Por RF
-   - Por Internet
-   - RF + Internet
+ - Por RF
+ - Por Internet
+ - RF + Internet
 4. Pulse **Enviar mensaje**.
 5. Consulte el historial para verificar el estado.
 
@@ -189,7 +287,7 @@ El historial puede mostrar estados como **Pendiente**, **Confirmado**, **Reenvia
 
 ---
 
-## 6. Estado y contactos
+## 7. Estado y contactos
 
 ![Estado general del sistema](images/manual_06.png)
 
@@ -212,7 +310,7 @@ La sección **Contactos** muestra actividad reciente por RF e información de es
 
 ---
 
-## 7. Actualización OTA
+## 8. Actualización OTA
 
 ![Actualización OTA](images/manual_08.png)
 
@@ -228,7 +326,7 @@ La actualización OTA permite instalar una nueva versión del firmware del ESP82
 
 ---
 
-## 8. Respaldo y restauración
+## 9. Respaldo y restauración
 
 ![Respaldo y restauración](images/manual_09.png)
 
@@ -248,7 +346,7 @@ Elimina configuración, mensajes, registros y contactos, pero conserva el firmwa
 
 ---
 
-## 9. Registro
+## 10. Registro
 
 ![Registro del sistema](images/manual_10.png)
 
@@ -264,7 +362,7 @@ También se puede consultar `log.txt`.
 
 ---
 
-## 10. Pantalla OLED
+## 11. Pantalla OLED
 
 ![Ayuda integrada y referencia OLED](images/manual_11.png)
 
@@ -282,7 +380,7 @@ La pantalla OLED también puede mostrar un bitmap monocromático de **128×64 p�
 
 ---
 
-## 11. Instalación inicial por USB
+## 12. Instalación inicial por USB
 
 El firmware del ESP8266 y el firmware de la Nano TNC son independientes.
 
@@ -302,7 +400,7 @@ Para la primera conexión recuerde las credenciales predefinidas: **usuario/SSID
 
 ---
 
-## 12. Nano TNC basada en ATmega
+## 13. Nano TNC basada en ATmega
 
 La Nano TNC realiza la interfaz APRS por RF y utiliza firmware independiente.
 
@@ -321,7 +419,7 @@ La publicación histórica de la plataforma acredita el firmware TNC a **SQ9MDD*
 
 ---
 
-## 13. Instalación mediante Web Flasher
+## 14. Instalación mediante Web Flasher
 
 El Web Flasher permite realizar la instalación inicial del firmware del ESP8266 directamente desde un navegador compatible.
 
@@ -358,7 +456,7 @@ El Web Flasher permite realizar la instalación inicial del firmware del ESP8266
 
 ---
 
-## 14. Historia y créditos
+## 15. Historia y créditos
 
 Indy Open APRS utiliza como plataforma de referencia la arquitectura de hardware de la **PCB TA1KNN**.
 
@@ -376,7 +474,7 @@ La referencia a **PCB TA1KNN** describe la plataforma física utilizada como bas
 
 ---
 
-## 15. Recomendaciones
+## 16. Recomendaciones
 
 - Configure primero accesos y red.
 - Cambie las credenciales predeterminadas `admin` / `indygate` después de la primera configuración.
@@ -391,7 +489,7 @@ La referencia a **PCB TA1KNN** describe la plataforma física utilizada como bas
 
 ## Créditos
 
-**Indy Open APRS**  
+**Indy Open APRS** 
 Indy Open Project by **XE3JAC**
 
 Documentación basada en la interfaz y hardware de referencia del proyecto.
